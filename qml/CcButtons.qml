@@ -21,6 +21,14 @@ RowLayout {
   property bool hasPlayer: false
   property real playerHeight: 0
 
+  property real wifiPanelX: 0
+  property real btPanelX: 0
+
+  function refreshPanelPositions() {
+    wifiPanelX = root.mapToGlobal(root.width, 0).x - (600 * root.dpi) - (30 * root.dpi)
+    btPanelX = root.mapToGlobal(root.width, 0).x + (29 * root.dpi)
+  }
+
   anchors.top: parent.top
   anchors.topMargin: hasPlayer ? playerHeight + 93 : 5
   anchors.left: parent.left
@@ -43,7 +51,7 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: WifiController.enabled
-            ? (wifiHover.hovered ? Qt.lighter("#1f2631", 1.2) : "#1f2631")
+            ? (wifiHover.hovered ? Qt.lighter("#181d23", 1.2) : "#181d23")
             : (wifiHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
     scale: wifiMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
@@ -73,6 +81,7 @@ RowLayout {
       cursorShape: Qt.PointingHandCursor
       onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
+          root.refreshPanelPositions()
           root.wifiPanelOpened = !root.wifiPanelOpened
           if (root.wifiPanelOpened && WifiController.enabled) WifiController.refreshNetworks(true)
           return
@@ -84,8 +93,8 @@ RowLayout {
 
   WifiPanel {
     visible: root.wifiPanelOpened
-    anchorX: root.mapToGlobal(root.width, 0).x - (600 * root.dpi) - (30 * root.dpi)
-    anchorY: wifiBtn.mapToGlobal(0, 0).y
+    anchorX: root.wifiPanelX
+    anchorY: 0
   }
 
   onNotificationPopupChanged: {
@@ -297,7 +306,7 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: BluetoothController.enabled
-            ? (btHover.hovered ? Qt.lighter("#1f2631", 1.2) : "#1f2631")
+            ? (btHover.hovered ? Qt.lighter("#181d23", 1.2) : "#181d23")
             : (btHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
     scale: btMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
@@ -327,6 +336,7 @@ RowLayout {
       cursorShape: Qt.PointingHandCursor
       onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
+          root.refreshPanelPositions()
           root.btPanelOpened = !root.btPanelOpened
           if (root.btPanelOpened && BluetoothController.enabled) BluetoothController.refreshDevices(true)
           return
@@ -338,7 +348,7 @@ RowLayout {
 
   BluetoothPanel {
     visible: root.btPanelOpened
-    anchorX: root.mapToGlobal(root.width, 0).x + (29 * root.dpi)
-    anchorY: btBtn.mapToGlobal(0, 0).y
+    anchorX: root.btPanelX
+    anchorY: 0
   }
 }
