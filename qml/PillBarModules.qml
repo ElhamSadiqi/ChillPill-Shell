@@ -57,6 +57,9 @@ Row {
         id: moduleLoader
         anchors.fill: parent
         source: isCustom ? "CustomBarModule.qml" : moduleFile(modelData)
+        // every bar module builds in parallel off the GUI thread, so the pill
+        // shows up right away instead of after every module compiled
+        asynchronous: true
         onLoaded: {
           if (isCustom) {
             item.spec = modelData

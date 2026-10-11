@@ -121,7 +121,8 @@ ShellRoot {
     id: panelWindow
     WlrLayershell.layer: WlrLayershell.Top
     WlrLayershell.keyboardFocus: (box.cliphistOpen || box.spotlight || box.wallpaperSwitcherOpen || box.powerMenu) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    implicitHeight: Math.max(885 * scale, calendarPopup.visible ? calendarPopup.y + calendarPopup.height : 0)
+    implicitHeight: Math.max(885 * scale, calendarLoader.item && calendarLoader.item.visible
+            ? calendarLoader.y + calendarLoader.item.height : 0)
     onScreenChanged: console.log("dpi:", screen.devicePixelRatio)
     property real scale: screen ? screen.devicePixelRatio : 1.0
 
@@ -152,9 +153,10 @@ ShellRoot {
       }
       Region {
         intersection: Intersection.Combine
-        x: Math.floor(calendarPopup.x); y: Math.floor(calendarPopup.y)
-        width: calendarPopup.shown ? Math.ceil(calendarPopup.width) : 0
-        height: calendarPopup.shown ? Math.ceil(calendarPopup.height) : 0
+        x: calendarLoader.item ? Math.floor(calendarLoader.x + calendarLoader.item.x) : 0
+        y: calendarLoader.item ? Math.floor(calendarLoader.y + calendarLoader.item.y) : 0
+        width: calendarLoader.item && calendarLoader.item.shown ? Math.ceil(calendarLoader.item.width) : 0
+        height: calendarLoader.item && calendarLoader.item.shown ? Math.ceil(calendarLoader.item.height) : 0
       }
       Region {
           intersection: Intersection.Combine
@@ -267,6 +269,26 @@ ShellRoot {
       property real tooltipY: 0
 
       property bool spotlight: false
+      // the calendar is only built while it is (or is fading out) visible
+      property bool calendarShown: false
+      // spotlight is heavy (app cache), so it is only built the first time it is
+      // opened and dropped a while after it closes again
+      readonly property int spotlightUnloadDelay: 60000
+      property bool spotlightLoaded: false
+      onSpotlightChanged: {
+        if (spotlight) {
+          spotlightLoaded = true
+          spotlightUnloadTimer.stop()
+        } else {
+          spotlightUnloadTimer.restart()
+        }
+      }
+
+      Timer {
+        id: spotlightUnloadTimer
+        interval: box.spotlightUnloadDelay
+        onTriggered: box.spotlightLoaded = false
+      }
       property bool hovered: false
       property bool miniDashboard: false
       property bool controlCenter: false
@@ -315,8 +337,6 @@ ShellRoot {
 
       property string activeOsd: "" // volume, brightness, timer, battery
 
-      Process { id: brightnessSetProc; running: false }
-
       Timer {
         id: osdHideTimer
         onTriggered: box.activeOsd = ""
@@ -335,7 +355,7 @@ ShellRoot {
       }
 
       readonly property int notifBump: notificationModule.notifications.length > 0
-        ? Math.min(notificationStack.listContentHeight + 40, 130) : 0
+        ? Math.min(ccPanel.notifBump, 130) : 0
 
       // adjust pill shape conditionally (pill state)
       readonly property real dpi: Config.dpiScale
@@ -397,9 +417,11 @@ ShellRoot {
 
       color: bg
 
+      onCalendarShownChanged: if (calendarLoader.item) calendarLoader.item.shown = box.calendarShown
+
       onMiniDashboardChanged: {
           if (!box.miniDashboard) {
-              calendarPopup.shown = false
+              box.calendarShown = false
               if (weatherPopupLoader.item) weatherPopupLoader.item.shown = false
           }
       }
@@ -662,10 +684,10 @@ ShellRoot {
               id: spotlightLoader
               width: parent.width
               anchors.horizontalCenter: parent.horizontalCenter
-              // keep the spotlight alive so its app cache/height persist between opens
-              // (avoids the open-time fallback -> empty -> full resize race)
-              active: true
-              asynchronous: false
+              // built on the first open, then kept alive so its app cache/height persist
+              // between opens (avoids the open-time fallback -> empty -> full resize race)
+              active: box.spotlightLoaded
+              asynchronous: true
 
               sourceComponent: Spotlight {
                   shown: box.spotlight
@@ -766,64 +788,9 @@ ShellRoot {
           }
         }
 
-        // media player
-        MediaPlayer {}
-
-        // control center buttons
-        CcButtons {
-          buttonWidth: box.ccButtonWidth
-          buttonHeight: box.ccButtonHeight
-          buttonRadius: box.ccButtonRadius
-          buttonBgOff: box.ccButtonBgOff
-          buttonFgOff: box.ccButtonFgOff
-          controlCenterOpen: box.controlCenter
-          mediaAutoOpened: mediaPopupShown
-          hasPlayer: mprisModule.hasPlayer
-          playerHeight: box.ccButtonHeight
-          notificationPopup: notificationModule.active
-        } 
-
-        CcSliders {
-          id: sliderColumn
-          anchors.top: parent.top
-          anchors.left: parent.left
-          anchors.right: parent.right
-          anchors.topMargin: mprisModule.hasPlayer ? box.ccButtonHeight + 137 : 50
-          anchors.leftMargin: 15
-          anchors.rightMargin: 2
-
-          sliderHeight: box.sliderHeight
-          sliderRadius: box.sliderRadius
-          sliderColor: box.sliderColor
-          sliderHitSlop: box.sliderHitSlop
-          volIcon: box.volumeModule.icon
-          volMuted: box.volumeModule.muted
-          volPercent: box.volumeModule.intendedVol
-          volMax: Config.maxVolume
-          brightnessIcon: brightnessModule.icon
-          brightnessPercent: brightnessModule.percent
-
-          onVolumeChangeRequested: (fraction) => {
-            if (box.volumeModule)
-              box.volumeModule.setVolume(Math.round(Math.max(0, Math.min(1, fraction)) * Config.maxVolume))
-          }
-          onBrightnessChangeRequested: (fraction) => {
-            let pct = Math.round(Math.max(0, Math.min(1, fraction)) * 100)
-            brightnessSetProc.command = ["brightnessctl", "set", pct + "%"]
-            brightnessSetProc.running = false
-            brightnessSetProc.running = true
-          }
-        }
-
-        NotificationStack {
-          id: notificationStack
-          anchors.top: sliderColumn.bottom
-          anchors.topMargin: 32
-          anchors.left: parent.left
-          anchors.right: parent.right
-          notifMaxHeight: 98
-          dpi: box.dpi
-          controlCenterOpen: box.controlCenter
+        ControlCenterPanel {
+          id: ccPanel
+          anchors.fill: parent
         }
       }
 
@@ -855,270 +822,14 @@ ShellRoot {
             }
         }
 
-        RowLayout {
-         // profile picture (display picture)
-           ClippingRectangle {
-            id: avatarClip
-            width: avatarSize
-            height: avatarSize
-            radius: avatarSize / 2
-            property string imgPath: Config.displayPicture ? "file://" + Config.displayPicture.replace("~", Quickshell.env("HOME")) : ""
-            color: (imgPath === "" || avatarImg.status !== Image.Ready) ? Theme.bg5 : "transparent"
-            layer.enabled: true
-            layer.smooth: true
-            layer.mipmap: true
-            layer.textureSize: Qt.size(avatarSize, avatarSize)
+        // only exists while the mini dashboard is open
+        Loader {
+          id: miniDashboardLoader
+          anchors.fill: parent
+          active: box.miniDashboard
+          asynchronous: true
 
-            Image {
-              id: avatarImg
-              anchors.fill: parent
-              source: avatarClip.imgPath
-              fillMode: Image.PreserveAspectCrop
-              asynchronous: false
-              smooth: true
-              mipmap: true
-              sourceSize: Qt.size(avatarSize, avatarSize)
-            }
-          }
-
-          // username
-          Process {
-            id: whoamiProc
-            command: ["sh", "-c", 'whoami']
-            running: true
-            stdout: StdioCollector {
-              onStreamFinished: { whoamiText.text = this.text.trim(); whoamiProc.running = false }
-            }
-          }
-
-          // hostname
-          Process {
-            id: hostnameProc
-            command: ["sh", "-c", "cat /etc/hostname"]
-            running: true
-            stdout: StdioCollector {
-              onStreamFinished: { hostnameText.text = "(" + this.text.trim() + ")"; hostnameProc.running = false }
-            }
-          }
-
-          // uptime
-          Process {
-            id: uptimeProc
-            command: ["sh", "-c", 'uptime -p']
-            running: true
-            stdout: StdioCollector {
-              onStreamFinished: uptimeText.text = this.text
-            }
-          }
-
-          // uptime refresh every 60 sec
-          Timer {
-            interval: 60000
-            running: box.miniDashboard
-            repeat: true
-            triggeredOnStart: true
-            onTriggered: {
-              uptimeProc.running = false
-              uptimeProc.running = true
-            }
-          }
-
-          // username + uptime stacked
-          ColumnLayout {
-            spacing: 2
-            Layout.alignment: Qt.AlignVCenter
-
-            RowLayout {
-              Text {
-                id: whoamiText
-                color: Theme.fg
-                Layout.leftMargin: 10
-                font { family: Theme.fontFamily; pixelSize: 14; weight: 600 }
-              }
-
-              Text {
-                id: hostnameText
-                color: Theme.fg5
-                Layout.topMargin: 2
-                font { family: Theme.fontFamily; pixelSize: 9; weight: 400 }
-              }
-            }
-
-            Text {
-              id: uptimeText
-              color: Theme.fg4
-              Layout.leftMargin: 10
-              font { family: Theme.fontFamily; pixelSize: 8; weight: 400 }
-            }
-          }
-        }
-
-        // show battery in mini dashboard too
-        Battery {
-          fontSize: 14
-          anchors.top: parent.top
-          anchors.right: parent.right
-          anchors.topMargin: 8
-          anchors.rightMargin: 12
-        }
-
-        // internet protocol information
-        IpStatus {
-          anchors.left: parent.left
-          anchors.leftMargin: 5
-          anchors.bottom: parent.bottom
-          anchors.bottomMargin: 42
-        }
-
-        // data usage status
-        DataUsage {
-          anchors.right: parent.right
-          anchors.rightMargin: 4
-          anchors.bottom: parent.bottom
-          anchors.bottomMargin: 42
-        }
-
-        // rectangle where poweroff, sleep etc. buttons placed
-        Rectangle {
-          color: Theme.bg2
-          implicitWidth: 15
-          implicitHeight: 30
-          radius: 8
-
-          anchors.top: parent.top
-          anchors.left: parent.left
-          anchors.right: parent.right
-          anchors.topMargin: 97
-
-          RowLayout {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: 8
-            anchors.rightMargin: 8
-            spacing: 8
-
-            // lock
-            Rectangle {
-              width: buttonSize; height: buttonSize
-              radius: buttonctlRadius; color: buttonBg
-              Layout.alignment: Qt.AlignVCenter
-              Text {
-                anchors.centerIn: parent;
-                text: "";
-                color: lockHover.containsMouse ? buttonHoverBg : Theme.fg;
-                font.pixelSize: 8
-                Behavior on color { ColorAnimation { duration: buttonHoverSpeed } }
-              }
-
-              MouseArea {
-                id: lockHover
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: { lockProc.running = false; lockProc.running = true }
-                hoverEnabled: true
-              }
-
-              Process { id: lockProc; command: ["bash", "-c", Config.screenLockAppCommand]; running: false }
-            }
-
-            // sleep
-            Rectangle {
-              width: buttonSize; height: buttonSize
-              radius: buttonctlRadius; color: buttonBg
-              Layout.alignment: Qt.AlignVCenter
-              Text {
-                anchors.centerIn: parent;
-                text: "󰤄";
-                color: sleepHover.containsMouse ? buttonHoverBg : Theme.fg;
-                font.pixelSize: 9
-                Behavior on color { ColorAnimation { duration: buttonHoverSpeed } }
-              }
-
-              MouseArea {
-                id: sleepHover
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: { sleepProc.running = false; sleepProc.running = true }
-                hoverEnabled: true
-              }
-              Process { id: sleepProc; command: ["bash", "-c", "systemctl suspend"]; running: false }
-            }
-
-            Item { Layout.fillWidth: true }
-
-            Datetime { id: datetimeItem; dateFg: Theme.fg4; }
-
-            Item { Layout.fillWidth: true }
-
-            Weather { id: weatherIndicatorItem; fg: Theme.fg4; clickable: true }
-
-            Item { Layout.fillWidth: true }
-
-            // reboot
-            Rectangle {
-              width: buttonSize; height: buttonSize
-              radius: buttonctlRadius; color: buttonBg
-              Layout.alignment: Qt.AlignVCenter
-              Text {
-                anchors.centerIn: parent;
-                text: "";
-                color: rebootHover.containsMouse ? buttonHoverBg : Theme.fg;
-                font.pixelSize: 9;
-                Behavior on color { ColorAnimation { duration: buttonHoverSpeed } }
-              }
-
-              MouseArea {
-                id: rebootHover
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                  if (Config.confirmPowerActions) {
-                    box.powerMenuInitialAction = "reboot"
-                    box.miniDashboard = false
-                    box.powerMenu = true
-                  } else {
-                    rebootProc.running = false
-                    rebootProc.running = true
-                  }
-                }
-                hoverEnabled: true
-              }
-              Process { id: rebootProc; command: ["bash", "-c", "systemctl reboot"]; running: false }
-            }
-
-            // shutdown
-            Rectangle {
-              width: buttonSize; height: buttonSize
-              radius: buttonctlRadius; color: buttonBg
-              Layout.alignment: Qt.AlignVCenter
-              Text {
-                anchors.centerIn: parent;
-                text: "󰐥";
-                color: shutdownHover.containsMouse ? buttonHoverBg : Theme.fg;
-                font.pixelSize: 12;
-                Behavior on color { ColorAnimation { duration: buttonHoverSpeed } }
-              }
-
-              MouseArea {
-                id: shutdownHover
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                  if (Config.confirmPowerActions) {
-                    box.powerMenuInitialAction = "shutdown"
-                    box.miniDashboard = false
-                    box.powerMenu = true
-                  } else {
-                    shutdownProc.running = false
-                    shutdownProc.running = true
-                  }
-                }
-                hoverEnabled: true
-              }
-              Process { id: shutdownProc; command: ["bash", "-c", "systemctl poweroff"]; running: false }
-            }
-          }
+          sourceComponent: MiniDashboard {}
         }
       }
       SystemClock {
@@ -1127,8 +838,17 @@ ShellRoot {
       }
     }
 
-    // calendar popup box
-    CalendarBox { id: calendarPopup }
+    // built on the first open, then freed once it has faded out
+    Loader {
+      id: calendarLoader
+      x: (parent.width - 225 * box.dpi) / 2      // centering lives here now
+      y: box.y + box.height * box.dpi + 5 * box.dpi  // stays live while the pill animates
+      active: box.calendarShown || (item && item.opacity > 0)
+      asynchronous: true
+
+      sourceComponent: CalendarBox {}
+      onLoaded: item.shown = box.calendarShown
+    }
 
     Loader {
         id: weatherPopupLoader
@@ -1149,24 +869,24 @@ ShellRoot {
 
     // open calendar when click on date in mini dashboard
     Connections {
-      target: datetimeItem
+      target: miniDashboardLoader.item
       function onToggleCalendar() {
-        console.log("toggleCalendar launched, current opacity:", calendarPopup.opacity)
-        calendarPopup.shown = !calendarPopup.shown
+        box.calendarShown = !box.calendarShown
+        if (box.calendarShown && calendarLoader.item) calendarLoader.item.resetView()
         if (weatherPopupLoader.item) weatherPopupLoader.item.shown = false
       }
     }
 
     // open weather when click on weather in mini dashboard
     Connections {
-      target: weatherIndicatorItem
+      target: miniDashboardLoader.item
       function onToggleWeather() {
         if (mediaPopupShown) return
         if (!weatherPopupLoader.active)
           weatherPopupLoader.active = true
         else
           weatherPopupLoader.item.shown = !weatherPopupLoader.item.shown
-        calendarPopup.shown = false
+        box.calendarShown = false
       }
     }
 
@@ -1411,7 +1131,4 @@ ShellRoot {
       }
     }
   }
-
 }
-
-
