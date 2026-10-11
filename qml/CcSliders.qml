@@ -68,6 +68,8 @@ Column {
 
       MouseArea {
         anchors.fill: parent
+        hoverEnabled: true 
+        cursorShape: Qt.PointingHandCursor
         anchors.topMargin: -sliderColumnRoot.sliderHitSlop
         anchors.bottomMargin: -sliderColumnRoot.sliderHitSlop
         onClicked: (mouse) => {
@@ -139,6 +141,8 @@ Column {
 
       MouseArea {
         anchors.fill: parent
+        hoverEnabled: true 
+        cursorShape: Qt.PointingHandCursor
         anchors.topMargin: -sliderColumnRoot.sliderHitSlop
         anchors.bottomMargin: -sliderColumnRoot.sliderHitSlop
         onClicked: (mouse) => {
