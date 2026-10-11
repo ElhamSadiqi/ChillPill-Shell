@@ -6,8 +6,11 @@ import QtQuick
 Item {
   id: root
 
+  // must read the raw list content height, not notificationStack.height:
+  // height is notifBox.height (contentHeight + 7) and is animated, which both
+  // adds a stray 7px gap and restarts the pill's height animation every frame
   readonly property real notifBump: notificationModule.notifications.length > 0
-    ? Math.min(notificationStack.height + 40, 130) : 0
+    ? Math.min(notificationStack.listContentHeight + 40, 130) : 0
 
   Process { id: brightnessSetProc; running: false }
 
