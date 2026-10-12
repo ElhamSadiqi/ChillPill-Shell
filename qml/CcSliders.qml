@@ -35,6 +35,8 @@ Column {
       color: volMuted ? "#fd2222" : Theme.fg
       font.family: Theme.nerdFontFamily
       font.pixelSize: 13
+      Layout.preferredWidth: 16
+      horizontalAlignment: Text.AlignHCenter
       Behavior on color { ColorAnimation { duration: 100 } }
 
       onTextChanged: volPulse.restart()
@@ -68,6 +70,8 @@ Column {
 
       MouseArea {
         anchors.fill: parent
+        hoverEnabled: true 
+        cursorShape: Qt.PointingHandCursor
         anchors.topMargin: -sliderColumnRoot.sliderHitSlop
         anchors.bottomMargin: -sliderColumnRoot.sliderHitSlop
         onClicked: (mouse) => {
@@ -86,7 +90,8 @@ Column {
       color: Theme.fg
       font.family: Theme.fontFamily
       font.pixelSize: 10
-      Layout.minimumWidth: 35
+      Layout.preferredWidth: 35 // Standardize uniform widths across both slider labels
+      horizontalAlignment: Text.AlignLeft
       onTextChanged: valPulse.restart()
       SequentialAnimation {
         id: valPulse
@@ -107,6 +112,8 @@ Column {
       color: Theme.fg
       font.family: Theme.nerdFontFamily
       font.pixelSize: 13
+      Layout.preferredWidth: 16 // Force matching bounding box for the icons
+      horizontalAlignment: Text.AlignHCenter
 
       onTextChanged: blPulse.restart()
       scale: 1.0
@@ -139,6 +146,8 @@ Column {
 
       MouseArea {
         anchors.fill: parent
+        hoverEnabled: true 
+        cursorShape: Qt.PointingHandCursor
         anchors.topMargin: -sliderColumnRoot.sliderHitSlop
         anchors.bottomMargin: -sliderColumnRoot.sliderHitSlop
         onClicked: (mouse) => {
@@ -159,7 +168,8 @@ Column {
       color: Theme.fg
       font.family: Theme.fontFamily
       font.pixelSize: 10
-      Layout.minimumWidth: 35
+      Layout.preferredWidth: 35
+      horizontalAlignment: Text.AlignLeft
       onTextChanged: btPulse.restart()
       SequentialAnimation {
           id: btPulse
