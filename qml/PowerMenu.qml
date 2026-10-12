@@ -14,7 +14,6 @@ Item {
 
   signal closeRequested()
 
-  readonly property real scaleFactor: Config.pillScale
   readonly property var actions: [
     { id: "lock",     label: "Lock",     icon: "", accent: "#628ae2" },
     { id: "sleep",    label: "Sleep",    icon: "󰤄", accent: "#9d6fff" },
@@ -22,6 +21,21 @@ Item {
     { id: "reboot",   label: "Restart",  icon: "", accent: "#ff6b35" },
     { id: "shutdown", label: "Shutdown", icon: "", accent: "#d62828" }
   ]
+
+  // every action gets the same slot width (widest label), otherwise the visual
+  // gaps between the 38px icon boxes differ per button
+  FontMetrics {
+    id: labelFM
+    font.family: Theme.fontFamily
+    font.pixelSize: 9
+    font.weight: Font.Bold
+  }
+  readonly property real slotWidth: {
+    let w = 38
+    for (let i = 0; i < actions.length; i++)
+      w = Math.max(w, labelFM.advanceWidth(actions[i].label))
+    return w
+  }
 
   // Commands are launched with Quickshell.execDetached(), NOT Process items.
   // A Process is a child of this Item, and this Item gets destroyed the instant
@@ -153,65 +167,65 @@ Item {
   RowLayout {
     id: selectionSection
     anchors.centerIn: parent
-    spacing: 40 * root.scaleFactor
+    spacing: 9
     opacity: 0
-    scale: 0.92
+    scale: 1.5
 
     Repeater {
       model: root.actions
       delegate: Item {
-        width: 16 * root.scaleFactor
-        height: 16 * root.scaleFactor
+        id: btnItem
+        implicitWidth: root.slotWidth
+        implicitHeight: iconBox.height + 6 + btnLabel.implicitHeight
         Layout.alignment: Qt.AlignVCenter
-        Layout.topMargin: 8
 
         property bool isSelected: index === root.selectedIndex
         property bool isHovered: itemMouse.containsMouse
 
-        ColumnLayout {
-          anchors.centerIn: parent
-          spacing: 6 * root.scaleFactor
+        Rectangle {
+          id: iconBox
+          anchors.top: parent.top
+          anchors.horizontalCenter: parent.horizontalCenter
+          width: 40
+          height: 40
+          radius: 12
+          color: isSelected ? Theme.bg4 : (isHovered ? Theme.bg2 : Theme.bg2)
+          border.color: isSelected ? modelData.accent : (isHovered ? Theme.borderBg1 : Theme.borderBg3)
+          border.width: isSelected ? 1.5 : 0.5
+          scale: itemMouse.pressed ? 0.92 : (isSelected ? 1.05 : (isHovered ? 1.03 : 1.0))
 
-          Rectangle {
-            Layout.alignment: Qt.AlignHCenter
-            width: 38 * root.scaleFactor
-            height: 38 * root.scaleFactor
-            radius: 12 * root.scaleFactor
-            color: isSelected ? Theme.bg4 : (isHovered ? Theme.bg2 : Theme.bg2)
-            border.color: isSelected ? modelData.accent : (isHovered ? Theme.borderBg1 : Theme.borderBg3)
-            border.width: isSelected ? 1.5 : 0.5
-            scale: itemMouse.pressed ? 0.92 : (isSelected ? 1.05 : (isHovered ? 1.03 : 1.0))
-
-            Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutQuad } }
-            Behavior on color { ColorAnimation { duration: 120 } }
-            Behavior on border.color { ColorAnimation { duration: 120 } }
-
-            Text {
-              anchors.centerIn: parent
-              text: modelData.icon
-              color: isSelected || isHovered ? modelData.accent : Theme.fg3
-              font { family: Theme.nerdFontFamily; pixelSize: 15 * root.scaleFactor }
-              Behavior on color { ColorAnimation { duration: 120 } }
-            }
-          }
+          Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutQuad } }
+          Behavior on color { ColorAnimation { duration: 120 } }
+          Behavior on border.color { ColorAnimation { duration: 120 } }
 
           Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: modelData.label
-            color: isSelected ? Theme.fg : (isHovered ? Theme.fg2 : Theme.fg5)
-            font { family: Theme.fontFamily; pixelSize: 9 * root.scaleFactor; weight: isSelected ? 600 : 400 }
+            anchors.centerIn: parent
+            text: modelData.icon
+            color: isSelected || isHovered ? modelData.accent : Theme.fg3
+            font { family: Theme.nerdFontFamily; pixelSize: 15 }
             Behavior on color { ColorAnimation { duration: 120 } }
           }
+        }
 
-          MouseArea {
-            id: itemMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onEntered: root.selectedIndex = index
-            onClicked: root.triggerAction(modelData.id)
-          }
-        } 
+        Text {
+          id: btnLabel
+          anchors.top: iconBox.bottom
+          anchors.topMargin: 6
+          anchors.horizontalCenter: parent.horizontalCenter
+          text: modelData.label
+          color: isSelected ? Theme.fg : (isHovered ? Theme.fg2 : Theme.fg5)
+          font { family: Theme.fontFamily; pixelSize: 9; weight: isSelected ? 600 : 400 }
+          Behavior on color { ColorAnimation { duration: 120 } }
+        }
+
+        MouseArea {
+          id: itemMouse
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onEntered: root.selectedIndex = index
+          onClicked: root.triggerAction(modelData.id)
+        }
       }
     }
   }
@@ -220,14 +234,14 @@ Item {
   ColumnLayout {
     id: confirmSection
     anchors.centerIn: parent
-    spacing: 10 * root.scaleFactor
+    spacing: 10
     opacity: 0
     scale: 0.92
 
     RowLayout {
       id: promptRow
       Layout.alignment: Qt.AlignHCenter
-      spacing: 8 * root.scaleFactor
+      spacing: 8
       opacity: 0
 
       Behavior on opacity {
@@ -240,7 +254,7 @@ Item {
       Text {
         text: root.pendingAction === "shutdown" ? "\udb81\udc25" : (root.pendingAction === "reboot" ? "\uead2" : "󰍃")
         color: root.pendingAction === "shutdown" ? "#e22323" : (root.pendingAction === "reboot" ? "#ff6b35" : "#ea9d34")
-        font { family: Theme.nerdFontFamily; pixelSize: 14 * root.scaleFactor }
+        font { family: Theme.nerdFontFamily; pixelSize: 14 }
       }
 
       Text {
@@ -248,14 +262,14 @@ Item {
             : (root.pendingAction === "reboot" ? "Restart system?"
             : "Log out of session?")
         color: Theme.fg
-        font { family: Theme.fontFamily; pixelSize: 11 * root.scaleFactor; weight: 600 }
+        font { family: Theme.fontFamily; pixelSize: 11; weight: 600 }
       }
     }
 
     RowLayout {
       id: buttonsRow
       Layout.alignment: Qt.AlignHCenter
-      spacing: 12 * root.scaleFactor
+      spacing: 12
       opacity: 0
       scale: 0.96
 
@@ -274,9 +288,9 @@ Item {
 
       // Cancel button
       Rectangle {
-        width: 78 * root.scaleFactor
-        height: 27 * root.scaleFactor
-        radius: 8 * root.scaleFactor
+        width: 78
+        height: 27
+        radius: 8
         color: (root.confirmIndex === 0 || root.hoveredButton === 0) ? Theme.focusBgL : Theme.bg1
         border.color: (root.confirmIndex === 0 || root.hoveredButton === 0) ? Theme.borderBgFocus : Theme.borderBg3
         border.width: 1
@@ -286,18 +300,18 @@ Item {
 
         RowLayout {
           anchors.centerIn: parent
-          spacing: 4 * root.scaleFactor
+          spacing: 4
           Text {
             text: "\uea76" // nf-md-close
             color: Theme.fg4
-            anchors.top: parent.top
-            anchors.topMargin: 1
-            font { family: Theme.nerdFontFamily; pixelSize: 11 * root.scaleFactor }
+            Layout.alignment: Qt.AlignVCenter
+            Layout.topMargin: 1
+            font { family: Theme.nerdFontFamily; pixelSize: 11 }
           }
           Text {
             text: "Cancel"
             color: Theme.fg2
-            font { family: Theme.fontFamily; pixelSize: 9 * root.scaleFactor; weight: 500 }
+            font { family: Theme.fontFamily; pixelSize: 9; weight: 500 }
           }
         }
 
@@ -314,9 +328,9 @@ Item {
 
       // Confirm button
       Rectangle {
-        width: 78 * root.scaleFactor
-        height: 27 * root.scaleFactor
-        radius: 8 * root.scaleFactor
+        width: 78
+        height: 27
+        radius: 8
         color: root.pendingAction === "shutdown" ? "#e22323" : (root.pendingAction === "reboot" ? "#ff6c25" : "#e07e20")
         opacity: (root.confirmIndex === 1 || root.hoveredButton === 1) ? 1.0 : 0.85
         scale: confirmMouse.pressed ? 0.94 : ((root.confirmIndex === 1 || root.hoveredButton === 1) ? 1.03 : 1.0)
@@ -325,20 +339,20 @@ Item {
 
         RowLayout {
           anchors.centerIn: parent
-          spacing: 4 * root.scaleFactor
+          spacing: 4
           Text {
             text: "\uf00c" // nf-md-check
             color: "white"
-            anchors.top: parent.top
-            anchors.topMargin: 1
-            font { family: Theme.nerdFontFamily; pixelSize: 11 * root.scaleFactor }
+            Layout.alignment: Qt.AlignVCenter
+            Layout.topMargin: 1
+            font { family: Theme.nerdFontFamily; pixelSize: 11 }
           }
           Text {
             text: root.pendingAction === "shutdown" ? "Shutdown"
                 : (root.pendingAction === "reboot" ? "Restart"
                 : "Logout")
             color: "white"
-            font { family: Theme.fontFamily; pixelSize: 9 * root.scaleFactor; weight: 600 }
+            font { family: Theme.fontFamily; pixelSize: 9; weight: 600 }
           }
         }
 

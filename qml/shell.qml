@@ -365,7 +365,7 @@ ShellRoot {
                      : activeOsd === "volume" ? osdWidth
                      : activeOsd === "brightness" ? osdWidth
                      : (notificationModule.active && !notifFullscreenMode) ? 320
-                     : powerMenu ? 342
+                     : powerMenu ? 350
                      : controlCenter ? 390
                      : spotlight ? 350
                      : miniDashboard ? 420
@@ -380,7 +380,7 @@ ShellRoot {
                   : activeOsd === "volume" ? osdHeight
                   : activeOsd === "brightness" ? osdHeight
                   : (notificationModule.active && !notifFullscreenMode) ? 52
-                  : powerMenu ? 100
+                  : powerMenu ? 102
                   : controlCenter && mprisModule.hasPlayer
                       ? (240 + notifBump)
                   : controlCenter
@@ -391,7 +391,7 @@ ShellRoot {
                       ? (spotlightLoader.item ? spotlightLoader.item.height + 15 : 250)
                   : wallpaperSwitcherOpen ? 308
                   : cliphistOpen ? 276
-                  : mediaPopupShown ? 92
+                  : mediaPopupShown ? 94
                   : (row.implicitHeight * Config.pillScale) + 10
 
       readonly property real baseRadius: notificationModule.active ? 99
@@ -403,6 +403,9 @@ ShellRoot {
         : spotlight ? 29
         : miniDashboard ? 20
         : wallpaperSwitcherOpen ? 30
+        : activeOsd !== "" ? 20
+        : powerMenu ? 22
+        : mediaPopupShown ? 23
         : 20 * Config.pillScale
 
       implicitWidth: baseWidth
