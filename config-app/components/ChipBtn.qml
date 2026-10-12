@@ -9,16 +9,27 @@ Rectangle {
     signal clicked()
     readonly property bool hovered: cma.containsMouse
 
-    width: 20; height: 22; radius: 5
-    color: cma.containsMouse ? (cb.danger ? Theme.bgD1 : Theme.bg6) : "transparent"
+    width: 20
+    height: 22
+    radius: 5
+    antialiasing: true
+    opacity: cb.dim ? 0.45 : 1
+
+    color: cma.containsMouse ? (cb.danger ? Theme.dangerBg2 : Theme.bg7) : "transparent"
+    Behavior on color { ColorAnimation { duration: Theme.durFast } }
+    Behavior on opacity { NumberAnimation { duration: Theme.durFast } }
+
     Text {
         anchors.centerIn: parent
         text: cb.label
-        color: cb.dim ? Theme.fg8 : (cb.danger ? Theme.deleting : Theme.fg4)
+        color: cb.dim ? Theme.fg8
+            : (cb.danger ? (cb.hovered ? Theme.deleting : Theme.fg5)
+            : (cb.hovered ? Theme.fg1 : Theme.fg4))
         font.family: Theme.fontFamily
         font.pixelSize: 11
-        Behavior on color { ColorAnimation { duration: 90 } }
+        Behavior on color { ColorAnimation { duration: Theme.durFast } }
     }
+
     MouseArea {
         id: cma
         anchors.fill: parent

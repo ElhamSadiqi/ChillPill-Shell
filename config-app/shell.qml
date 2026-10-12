@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "components"
@@ -113,11 +114,21 @@ ShellRoot {
                     Rectangle {
                         id: searchBox
                         Layout.fillWidth: true
-                        height: 30
-                        radius: 6
-                        color: Theme.bg1
-                        border.color: si.activeFocus ? Theme.borderBgFocus : Theme.borderBg2
-                        Behavior on border.color { ColorAnimation { duration: 90 } }
+                        height: 32
+                        radius: 7
+                        antialiasing: true
+                        color: si.activeFocus ? Theme.inputBgFocus : (sbMa.containsMouse ? Theme.inputBgHover : Theme.inputBg)
+                        Behavior on color { ColorAnimation { duration: Theme.durFast } }
+                        border.width: 1
+                        border.color: si.activeFocus ? Theme.accent : (sbMa.containsMouse ? Theme.borderBg1 : Theme.borderBg3)
+                        Behavior on border.color { ColorAnimation { duration: Theme.durFast } }
+                        MouseArea {
+                            id: sbMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.NoButton
+                            cursorShape: Qt.IBeamCursor
+                        }
                         // idle hint
                         Text {
                             id: hint
@@ -144,9 +155,10 @@ ShellRoot {
                             Text {
                                 id: sic
                                 text: String.fromCodePoint(0xf002) // fa-search
-                                color: si.activeFocus ? Theme.accent : Theme.fg5
+                                color: si.activeFocus || sbMa.containsMouse ? Theme.accent : Theme.fg5
                                 font.family: Theme.nerdFontFamily
                                 font.pixelSize: 11
+                                Behavior on color { ColorAnimation { duration: Theme.durFast } }
                             }
                             TextInput {
                                 id: si
@@ -154,7 +166,9 @@ ShellRoot {
                                 verticalAlignment: TextInput.AlignVCenter
                                 color: Theme.fg
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontSizeBase - 1
+                                selectionColor: Theme.accent
+                                selectedTextColor: Theme.bgD
                                 selectByMouse: true
                                 clip: true
                                 // no text: binding; typing writes win.search directly
@@ -165,9 +179,10 @@ ShellRoot {
                             Text {
                                 visible: si.text !== ""
                                 text: "\u2715"
-                                color: clrMa.containsMouse ? Theme.fg : Theme.fg5
+                                color: clrMa.containsMouse ? Theme.fg1 : Theme.fg5
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
+                                Behavior on color { ColorAnimation { duration: Theme.durFast } }
                                 MouseArea {
                                     id: clrMa
                                     anchors.fill: parent
@@ -179,67 +194,100 @@ ShellRoot {
                             }
                         }
                     }
-                    Repeater {
-                        model: win.pages
-                        Rectangle {
-                            id: nav
-                            required property int index
-                            required property var modelData
-                            Layout.fillWidth: true
-                            implicitHeight: 38; radius: 8
-                            color: win.current === nav.index ? Theme.bg5 : (nma.containsMouse ? Theme.bg2 : "transparent")
-                            Behavior on color { ColorAnimation { duration: 90 } }
-                            // dim pages the query misses
-                            opacity: win.search !== "" && win.matches(nav.index) === 0 ? 0.35 : 1
-                            Behavior on opacity { NumberAnimation { duration: 90 } }
-                            Rectangle {
-                                // active-page indicator
-                                x: 2
-                                width: 3; height: 20; radius: 1.5
-                                anchors.verticalCenter: parent.verticalCenter
-                                visible: win.current === nav.index
-                                color: Theme.accent
+                    // section list: the only part allowed to shrink. it scrolls
+                    // rather than pushing the footer below it out of the window
+                    Flickable {
+                        id: navFlick
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumHeight: 0
+                        clip: true
+                        contentWidth: width
+                        contentHeight: navCol.implicitHeight
+                        boundsBehavior: Flickable.StopAtBounds
+                        flickableDirection: Flickable.VerticalFlick
+
+                        ScrollBar.vertical: ScrollBar {
+                            policy: ScrollBar.AsNeeded
+                            width: 4
+                            contentItem: Rectangle {
+                                implicitWidth: 4
+                                radius: 2
+                                color: Theme.fg6
+                                opacity: navFlick.moving || navFlick.flicking ? 0.9 : 0.35
+                                Behavior on opacity { NumberAnimation { duration: Theme.durMed } }
                             }
-                            Row {
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: 12
-                                spacing: 10
-                                Text {
-                                    text: nav.modelData.icon
-                                    color: win.current === nav.index ? Theme.fg : Theme.fg3
-                                    font.family: Theme.nerdFontFamily
-                                    font.pixelSize: 14
+                        }
+
+                        Column {
+                            id: navCol
+                            width: navFlick.width
+                            spacing: 4
+                            Repeater {
+                                model: win.pages
+                                Rectangle {
+                                    id: nav
+                                    required property int index
+                                    required property var modelData
+                                    width: navCol.width
+                                    height: 38; radius: 8
+                                    antialiasing: true
+                                    color: win.current === nav.index ? Theme.bg5 : (nma.containsMouse ? Theme.bg2 : "transparent")
+                                    Behavior on color { ColorAnimation { duration: 90 } }
+                                    // dim pages the query misses
+                                    opacity: win.search !== "" && win.matches(nav.index) === 0 ? 0.35 : 1
+                                    Behavior on opacity { NumberAnimation { duration: 90 } }
+                                    Rectangle {
+                                        // active-page indicator
+                                        x: 2
+                                        width: 3; height: 20; radius: 1.5
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        visible: win.current === nav.index
+                                        color: Theme.accent
+                                    }
+                                    Row {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: 12
+                                        spacing: 10
+                                        Text {
+                                            text: nav.modelData.icon
+                                            color: win.current === nav.index ? Theme.fg : Theme.fg3
+                                            font.family: Theme.nerdFontFamily
+                                            font.pixelSize: 14
+                                        }
+                                        Text {
+                                            text: nav.modelData.name
+                                            color: win.current === nav.index ? Theme.fg : Theme.fg3
+                                            font.family: Theme.fontFamily
+                                        }
+                                    }
+                                    // hits on this page
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: 10
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        visible: win.search !== "" && win.matches(nav.index) > 0
+                                        text: win.matches(nav.index)
+                                        color: Theme.accent
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                    }
+                                    MouseArea {
+                                        id: nma
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: win.current = nav.index
+                                    }
                                 }
-                                Text {
-                                    text: nav.modelData.name
-                                    color: win.current === nav.index ? Theme.fg : Theme.fg3
-                                    font.family: Theme.fontFamily
-                                }
-                            }
-                            // hits on this page
-                            Text {
-                                anchors.right: parent.right
-                                anchors.rightMargin: 10
-                                anchors.verticalCenter: parent.verticalCenter
-                                visible: win.search !== "" && win.matches(nav.index) > 0
-                                text: win.matches(nav.index)
-                                color: Theme.accent
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 10
-                            }
-                            MouseArea {
-                                id: nma
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: win.current = nav.index
                             }
                         }
                     }
-                    Item { Layout.fillHeight: true }
+                    // footer: fixed height, pinned under the list, never overlapped by it
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 1
+                        Layout.preferredHeight: 1
+                        Layout.minimumHeight: 1
                         color: Theme.bg3
                         Layout.topMargin: 8
                         Layout.bottomMargin: 8
@@ -251,11 +299,22 @@ ShellRoot {
                         font.pixelSize: 10
                         wrapMode: Text.WrapAnywhere
                         Layout.fillWidth: true
+                        Layout.minimumHeight: implicitHeight
                     }
                     RowLayout {
                         Layout.fillWidth: true
+                        Layout.preferredHeight: 32
+                        Layout.minimumHeight: 26
                         Layout.bottomMargin: 6
-                        Text { text: ConfigStore.status; color: ConfigStore.statusError ? Theme.deleting : Theme.fg3; font.family: Theme.fontFamily; font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
+                        spacing: 8
+                        Text {
+                            text: ConfigStore.status
+                            color: ConfigStore.statusError ? Theme.deleting : Theme.fg3
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
                         MiniBtn { label: ""; onClicked: ConfigStore.reload(); fontSize: 15; rectRadius: 8 }
                     }
                 }

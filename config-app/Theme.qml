@@ -63,7 +63,19 @@ Singleton {
     readonly property string ok: "#3ecf6e"
 
     readonly property string accent: "#979797"
+    readonly property string accentHi: "#b4b4b4"
+    readonly property string accentLo: "#7c7c7c"
     readonly property string coverArtGlowShadow: "#80aae6" // hardcored for now
+
+    readonly property string dangerBg: "#3a1c1c"
+    readonly property string dangerBg2: "#54211f"
+
+    readonly property string inputBg: "#151515"
+    readonly property string inputBgHover: "#1b1b1b"
+    readonly property string inputBgFocus: "#202020"
+
+    readonly property int durFast: 110
+    readonly property int durMed: 180
 
     readonly property int fontSizeBase: 13
     readonly property int fontSize: Math.round(fontSizeBase * Config.pillScale)

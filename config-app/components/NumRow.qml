@@ -20,34 +20,72 @@ SRow {
         n.edited(n.clamp(Math.round(s * n.divisor)))
     }
 
+    readonly property int rowH: 30
+
     Row {
         spacing: 6
-        MiniBtn { label: "−"; onClicked: n.edited(n.clamp(n.value - n.step)) }
+        height: n.rowH
+
+        MiniBtn {
+            label: "\u2212"
+            btnHeight: n.rowH
+            onClicked: n.edited(n.clamp(n.value - n.step))
+        }
+
         Rectangle {
-            width: 84; height: 28; radius: 6; color: Theme.bg2
-            border.color: inp.activeFocus ? Theme.borderBgFocus : Theme.borderBg2
+            width: 84
+            height: n.rowH
+            radius: 7
+            antialiasing: true
+
+            color: inp.activeFocus ? Theme.inputBgFocus : (nfma.containsMouse ? Theme.inputBgHover : Theme.inputBg)
+            Behavior on color { ColorAnimation { duration: Theme.durFast } }
+
+            border.width: 1
+            border.color: inp.activeFocus ? Theme.accent
+                : (nfma.containsMouse ? Theme.borderBg1 : Theme.borderBg3)
+            Behavior on border.color { ColorAnimation { duration: Theme.durFast } }
+
             TextInput {
                 id: inp
                 anchors.fill: parent
-                anchors.margins: 6
+                anchors.margins: 7
                 horizontalAlignment: TextInput.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
                 color: Theme.fg
                 font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBase - 1
+                selectionColor: Theme.accent
+                selectedTextColor: Theme.bgD
                 selectByMouse: true
                 inputMethodHints: Qt.ImhFormattedNumbersOnly
                 text: (n.value / n.divisor).toFixed(n.decimals)
                 onEditingFinished: n.commit(text)
             }
+
+            MouseArea {
+                id: nfma
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
+                cursorShape: Qt.IBeamCursor
+            }
         }
-        MiniBtn { label: "+"; onClicked: n.edited(n.clamp(n.value + n.step)) }
+
+        MiniBtn {
+            label: "+"
+            btnHeight: n.rowH
+            onClicked: n.edited(n.clamp(n.value + n.step))
+        }
+
         Text {
             visible: n.suffix !== ""
             text: n.suffix
             color: Theme.fg4
             font.family: Theme.fontFamily
             width: 28
-            anchors.verticalCenter: parent.verticalCenter
+            height: n.rowH
+            verticalAlignment: Text.AlignVCenter
         }
     }
 }
