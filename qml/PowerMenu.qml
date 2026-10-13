@@ -83,7 +83,7 @@ Item {
     } else if (actId === "reboot") {
       Quickshell.execDetached(["bash", "-c", "systemctl reboot"])
     } else if (actId === "logout") {
-      Quickshell.execDetached(["bash", "-c", "loginctl terminate-session ${XDG_SESSION_ID:-self} || hyprctl dispatch exit || pkill -KILL -u $USER"])
+      Quickshell.execDetached(["bash", "-c", "hyprctl dispatch 'hl.dsp.exit()' || hyprctl dispatch exit || loginctl terminate-session ${XDG_SESSION_ID:-self}"])
     }
     cancelConfirmation()
     closeRequested()
