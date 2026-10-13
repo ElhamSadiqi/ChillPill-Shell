@@ -124,7 +124,7 @@ fi
 
 # make directories
 info "Creating few new directories"
-mkdir -p /usr/share/chillpill-shell/IslandBackend
+mkdir -p /usr/share/chillpill-shell/PillBackend
 mkdir -p "$REAL_HOME/.config/chillpill-shell/modules"
 mkdir -p "$REAL_HOME/.cache/chillpill-shell"
 #mkdir -p /etc/systemd/user
@@ -134,9 +134,9 @@ SRC_FILES=$(find . -name '*.cpp' -o -name '*.h' -o -name 'CMakeLists.txt')
 HASH_FILE='.builds_hash'
 
 backend_files=(
-  IslandBackend.qmltypes
-  libIslandBackendPlugin.so
-  libIslandBackend.so
+  PillBackend.qmltypes
+  libPillBackendPlugin.so
+  libPillBackend.so
   qmldir
 )
 
@@ -145,7 +145,7 @@ if [[ -f "$HASH_FILE" ]]; then
     if sha256sum -c "$HASH_FILE" --status 2>/dev/null; then
         all_exist=true
         for file in "${backend_files[@]}"; do
-            if [[ ! -f "/usr/share/chillpill-shell/IslandBackend/$file" ]]; then
+            if [[ ! -f "/usr/share/chillpill-shell/PillBackend/$file" ]]; then
                 all_exist=false
                 break
             fi
@@ -163,11 +163,11 @@ if $needs_build; then
 
     info "Copying backend files"
     install -m 644 \
-       build/libIslandBackend.so \
-       build/libIslandBackendPlugin.so \
+       build/libPillBackend.so \
+       build/libPillBackendPlugin.so \
        build/qmldir \
-       build/IslandBackend.qmltypes \
-         /usr/share/chillpill-shell/IslandBackend
+       build/PillBackend.qmltypes \
+         /usr/share/chillpill-shell/PillBackend
 
     echo "$SRC_FILES" | xargs sha256sum > "$HASH_FILE"
 else
@@ -206,8 +206,8 @@ chmod 755 /usr/share/chillpill-shell/config-app
 # config-app has subdirectories (components, pages), so using find here to set permissions
 find /usr/share/chillpill-shell/config-app -type d -exec chmod 755 {} +
 find /usr/share/chillpill-shell/config-app -type f -exec chmod 644 {} +
-chmod 755 /usr/share/chillpill-shell/IslandBackend
-chmod 644 /usr/share/chillpill-shell/IslandBackend/*
+chmod 755 /usr/share/chillpill-shell/PillBackend
+chmod 644 /usr/share/chillpill-shell/PillBackend/*
 chmod 755 "$REAL_HOME/.config/chillpill-shell/modules"
 
 # chown back the files permission to real user

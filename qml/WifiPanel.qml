@@ -3,7 +3,7 @@ import Quickshell.Wayland
 import Quickshell.Networking
 import QtQuick
 import QtQuick.Layouts
-import IslandBackend
+import PillBackend
 
 PanelWindow {
   id: wifiListWindow

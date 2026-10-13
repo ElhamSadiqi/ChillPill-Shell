@@ -1,7 +1,7 @@
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import IslandBackend
+import PillBackend
 
 RowLayout {
     id: root

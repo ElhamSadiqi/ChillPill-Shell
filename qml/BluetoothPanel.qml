@@ -2,7 +2,7 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
-import IslandBackend
+import PillBackend
 
 PanelWindow {
   id: btListWindow

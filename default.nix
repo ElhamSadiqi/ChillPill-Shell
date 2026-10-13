@@ -81,7 +81,7 @@ pkgs.stdenv.mkDerivation rec {
     install -Dm755 $src/launcher.sh $out/bin/chillpill-shell
     substituteInPlace $out/bin/chillpill-shell \
       --replace '/usr/share/chillpill-shell' "$out/share/chillpill-shell" \
-      --replace '$HOME/.config/quickshell/chillpill-shell/IslandBackend' "$out/lib/qt6/qml/IslandBackend"
+      --replace '$HOME/.config/quickshell/chillpill-shell/PillBackend' "$out/lib/qt6/qml/PillBackend"
 
     cat > $out/bin/chillpill-shell-ipc <<'WRAPPER'
   #!/usr/bin/env bash
@@ -116,7 +116,7 @@ pkgs.stdenv.mkDerivation rec {
     wrapProgram $out/bin/chillpill-shell \
       --set QML_IMPORT_PATH "$out/share/chillpill-shell:$out/lib/qt6/qml:${qmlImportPath}" \
       --set QT_PLUGIN_PATH "${qtPluginPath}" \
-      --set LD_LIBRARY_PATH "$out/lib/qt6/qml/IslandBackend" \
+      --set LD_LIBRARY_PATH "$out/lib/qt6/qml/PillBackend" \
       --prefix PATH : ${pkgs.lib.makeBinPath runtimeDeps}
   '';
 
