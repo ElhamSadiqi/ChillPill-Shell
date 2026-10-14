@@ -17,7 +17,7 @@ Item {
     property string filter: ""
     property int matchCount: 0
 
-    onFilterChanged: applyFilter()
+    onFilterChanged: { flick.contentY = 0; applyFilter() }
     Component.onCompleted: applyFilter()
     // a hidden page can't read back its rows' visible, so re-apply on show
     onVisibleChanged: if (visible) applyFilter()
@@ -95,6 +95,10 @@ Item {
         contentHeight: col.implicitHeight + 60
         clip: true
         boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
+        // filtering shrinks the content; never leave the view past the end,
+        // that used to strand the thumb outside its track
+        onContentHeightChanged: contentY = Math.max(0, Math.min(contentY, Math.max(0, contentHeight - height)))
         ColumnLayout {
             id: col
             x: 28; y: 24
@@ -113,66 +117,92 @@ Item {
     }
     Item {
         id: vbar
-        visible: flick.visibleArea.heightRatio < 1.0 && !pg.empty
+        // scrollable range, guarded so the thumb never divides by zero
+        readonly property real range: Math.max(0, flick.contentHeight - flick.height)
+        readonly property bool needed: flick.visible && range > 1 && height > 40
+        visible: needed
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.margins: 6
         width: 8
-        opacity: vbarHover.hovered || thumbMa.dragging ? 1 : 0.7
-        Behavior on opacity { NumberAnimation { duration: 120 } }
+        opacity: vbarHover.hovered || thumbDrag.active || flick.flicking ? 1 : 0.6
+        Behavior on opacity { NumberAnimation { duration: 140 } }
 
         Rectangle {
             anchors.fill: parent
             radius: 4
             color: Theme.bg3
+            opacity: vbar.needed ? 0.6 : 0
         }
+        // click the track to page; wheel over the bar scrolls too
         MouseArea {
             id: trackMa
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onPressed: (mouse) => {
-                if (mouse.y >= thumb.y && mouse.y <= thumb.y + thumb.height) return
-                thumb.jumpTo(mouse.y)
+            onClicked: (mouse) => {
+                if (vbar.range <= 0) return
+                var dir = mouse.y < thumb.y ? -1 : 1
+                flick.contentY = Math.max(0, Math.min(vbar.range, flick.contentY + dir * flick.height * 0.85))
             }
         }
+        // wheel over the bar scrolls too; touchpads send pixelDelta, so keep
+        // the leftover fraction or slow two-finger scrolls come out choppy
+        WheelHandler {
+            property real accum: 0
+            onWheel: (event) => {
+                if (!vbar.needed) return
+                var d = event.angleDelta.y !== 0 ? event.angleDelta.y / 120
+                        : event.pixelDelta.y / 48
+                accum += d * 48
+                var step = Math.trunc(accum)
+                accum -= step
+                if (step !== 0) flick.contentY = Math.max(0, Math.min(vbar.range, flick.contentY - step))
+            }
+        }
+
         Rectangle {
             id: thumb
             x: 1
             width: parent.width - 2
             radius: 3
             color: Theme.bg8
-            readonly property real maxY: Math.max(0, vbar.height - thumb.height)
-            readonly property real trackY: flick.visibleArea.heightRatio < 1
-                ? flick.visibleArea.yPosition * maxY : 0
-            height: Math.max(28, flick.visibleArea.heightRatio * vbar.height)
-            y: thumbMa.dragging ? thumbMa.dragY : trackY
-            function jumpTo(my) {
-                var ny = Math.max(0, Math.min(my - thumb.height / 2, thumb.maxY))
-                var f = ny / Math.max(1, thumb.maxY)
-                flick.contentY = f * (flick.contentHeight - flick.height)
-            }
-            MouseArea {
-                id: thumbMa
-                anchors.fill: parent
+            // exact visible fraction, clamped so a short window can't
+            // produce a thumb taller than its own track
+            readonly property real maxY: Math.max(0, vbar.height - height)
+            readonly property real ratio: flick.height / Math.max(1, flick.contentHeight)
+            readonly property real trackY: maxY * (vbar.range > 0
+                ? Math.max(0, Math.min(1, flick.contentY / vbar.range)) : 0)
+            height: Math.max(24, Math.min(vbar.height, vbar.height * ratio))
+            // bound straight to contentY: it already ticks every frame while
+            // the flickable is moving, and an animation here restarted each
+            // frame just made the thumb crawl behind the content
+            y: thumbDrag.active ? thumbDrag.dragY : trackY
+
+            DragHandler {
+                id: thumbDrag
+                target: null
+                xAxis.enabled: false
                 cursorShape: Qt.PointingHandCursor
                 property real dragY: 0
-                property real grabOffset: 0
-                property bool dragging: false
-                onPressed: (mouse) => {
-                    thumbMa.grabOffset = mouse.y
-                    thumbMa.dragY = thumb.y
-                    thumbMa.dragging = true
+                property real baseY: 0
+                onActiveChanged: {
+                    if (active) {
+                        // flickable has no writable velocity in qt 6.12; going
+                        // non-interactive kills the kinetic timer and the fling
+                        flick.interactive = false
+                        baseY = thumb.trackY
+                        dragY = thumb.trackY
+                    } else {
+                        flick.interactive = true
+                    }
                 }
-                onReleased: thumbMa.dragging = false
-                onPositionChanged: (mouse) => {
-                    if (!pressed) return
-                    var ny = Math.max(0, Math.min(thumb.maxY,
-                        thumbMa.dragY + (mouse.y - thumbMa.grabOffset)))
-                    thumbMa.dragY = ny
-                    var f = ny / Math.max(1, thumb.maxY)
-                    flick.contentY = f * (flick.contentHeight - flick.height)
+                onActiveTranslationChanged: {
+                    if (!active || vbar.range <= 0) return
+                    var ny = Math.max(0, Math.min(thumb.maxY, baseY + activeTranslation.y))
+                    dragY = ny
+                    flick.contentY = (ny / Math.max(1, thumb.maxY)) * vbar.range
                 }
             }
         }
