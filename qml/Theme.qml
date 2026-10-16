@@ -1,6 +1,7 @@
 pragma Singleton
 import Quickshell
 import QtQuick
+import "./Config.qml"
 
 Singleton {
     // more darker (descending)

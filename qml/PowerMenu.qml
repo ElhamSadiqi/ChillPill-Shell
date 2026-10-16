@@ -43,9 +43,19 @@ Item {
   // that was killing shutdown/reboot/lock/sleep before they ever actually ran.
   // execDetached() spawns the command fully independent of this item's lifetime.
 
+  // lockscreen.qml ships next to shell.qml, so resolve it from the config folder
+  readonly property string builtinLockPath: {
+    const u = Qt.resolvedUrl("Lockscreen.qml")
+    return u.toString().startsWith("file://") ? u.toString().slice(7) : ""
+  }
+
   function triggerAction(actId) {
     if (actId === "lock") {
-      Quickshell.execDetached(["bash", "-c", Config.screenLockAppCommand])
+      // prefer the built-in lockscreen (ships next to shell.qml), fall back to the
+      // configured locker (hyprlock & friends) when it is not installed
+      const script = 'p=' + JSON.stringify(root.builtinLockPath) + '; '
+        + 'if [ -f "$p" ]; then LOCK_NOW=1 qs -p "$p"; else ' + Config.screenLockAppCommand + '; fi';
+      Quickshell.execDetached(["bash", "-c", script])
       closeRequested()
       return
     }

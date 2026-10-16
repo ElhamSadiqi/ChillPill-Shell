@@ -30,8 +30,11 @@ Rectangle {
   transformOrigin: Item.Center
   signal closeRequested()
 
+  readonly property string cacheDir: Quickshell.env("HOME") + "/.cache/chillpill-shell"
+
   function applyWallpaper(path) {
     wallpaperPopup.selectedWallpaper = "file://" + path
+    saveCurrentWallpaper(path)
     if (Config.customWallpaperScript.trim() === "") {
       Quickshell.execDetached(["awww", "img", "--transition-type", "random", path])
     }
@@ -42,6 +45,12 @@ Rectangle {
           : script + " \"$1\"" // fallback for old-style configs without the placeholder
       Quickshell.execDetached(["sh", "-c", cmd, "_", path])
     }
+  }
+
+  function saveCurrentWallpaper(path) {
+    // execDetached, not a Process child: closeRequested() unloads this item right
+    // after applyWallpaper(), which kills a child Process before it ever runs
+    Quickshell.execDetached(["sh", "-c", 'mkdir -p "$1" && printf %s "$2" > "$1/last_wallpaper"', "_", cacheDir, path])
   }
 
   function activateCurrent() {

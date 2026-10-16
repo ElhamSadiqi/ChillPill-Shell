@@ -1,0 +1,1050 @@
+pragma ComponentBehavior: Bound
+
+// Lives next to shell.qml so it picks up Config.qml / Theme.qml directly.
+// Config:   ~/.config/chillpill-shell/config.jsonc via Config.qml (displayPicture, clockFormat,
+//           textFontFamily, nerdFontFamily, pillModules, dpiScale, showShadows, confirmPowerActions,
+//           weatherLocation, weatherUnits, weatherRefreshInterval)
+// As your lock command (screenLockAppCommand): env LOCK_NOW=1 qs -p /path/to/lockscreen.qml
+// Wallpaper: $LOCK_WALLPAPER when set, else the path stored in
+//           ~/.cache/chillpill-shell/last_wallpaper
+// Colors:   everything comes from qml/Theme.qml
+
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Widgets
+import Quickshell.Services.Pam
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Effects
+
+Scope {
+    id: root
+
+    // environment
+    readonly property string envWallpaper: Quickshell.env("LOCK_WALLPAPER") || ""
+    readonly property string userName: Quickshell.env("USER") || "user"
+    readonly property string home: Quickshell.env("HOME") || ""
+    readonly property bool oneshot: Quickshell.env("LOCK_NOW") === "1"
+    readonly property string pamConfig: "login"
+
+    function expandHome(p) {
+        return (p && p.startsWith("~")) ? home + p.slice(1) : p;
+    }
+
+    readonly property string textFont: Theme.fontFamily
+    readonly property string nerdFont: Theme.nerdFontFamily
+    readonly property string clockFmt: "hh:mm AP"
+    readonly property real pillW: 440
+    readonly property real pillH: Math.round(44 * Config.pillScale) + 10
+    readonly property real pillR: 20 * Config.pillScale
+    readonly property real pillCenterY: Config.pillTopMargin + pillH / 2
+    readonly property string avatarPath: expandHome(Config.displayPicture)
+    readonly property real dpiScale: Config.dpiScale
+    readonly property bool confirmPower: Config.confirmPowerActions
+    readonly property bool showBattery: Config.pillModules.indexOf("battery") !== -1
+
+    // weather (same endpoint + glyphs as qml/WeatherModule.qml)
+    readonly property string wLocation: Config.weatherLocation
+    readonly property string wUnits: Config.weatherUnits
+    readonly property bool wMetric: wUnits !== "imperial"
+
+    property bool wLoading: true
+    property real wTemp: NaN
+    property string wUnit: "°C"
+    property string wGlyph: "\ue312"
+    property string wGlyphColor: "#9aa0a6"
+    readonly property bool wOk: wLocation !== "" && !isNaN(wTemp)
+
+    function wIconForCode(code) {
+        const c = parseInt(code);
+        if (c === 113)
+            return { glyph: "\ue30d", color: "#f4c542" };
+        if ([116, 119, 122].indexOf(c) !== -1)
+            return { glyph: "\ue312", color: "#9aa0a6" };
+        if ([176, 263, 266, 293, 296, 299, 302, 305, 308, 311, 314, 317, 320, 353, 356, 359].indexOf(c) !== -1)
+            return { glyph: "\ue318", color: "#4a9de8" };
+        if ([200, 386, 389, 392, 395].indexOf(c) !== -1)
+            return { glyph: "\ue31d", color: "#e8b84a" };
+        if ([227, 230, 323, 326, 329, 332, 335, 338, 350, 368, 371, 374, 377].indexOf(c) !== -1)
+            return { glyph: "\ue31a", color: "#d8e8f4" };
+        if ([143, 248, 260].indexOf(c) !== -1)
+            return { glyph: "\ue313", color: "#8a8a8a" };
+        return { glyph: "\ue312", color: "#9aa0a6" };
+    }
+
+    function refreshWeather() {
+        if (root.wLocation === "")
+            return;
+        root.wLoading = true;
+        const metric = root.wMetric;
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return;
+            root.wLoading = false;
+            if (xhr.status !== 200)
+                return;
+            try {
+                const d = JSON.parse(xhr.responseText);
+                const cur = d.current_condition[0];
+                root.wTemp = parseFloat(metric ? cur.temp_C : cur.temp_F);
+                root.wUnit = metric ? "°C" : "°F";
+                const ic = root.wIconForCode(cur.weatherCode);
+                root.wGlyph = ic.glyph;
+                root.wGlyphColor = ic.color;
+            } catch (e) {
+            }
+        };
+        xhr.open("GET", "https://wttr.in/" + encodeURIComponent(root.wLocation) + "?format=j1");
+        xhr.send();
+    }
+
+    Timer {
+        id: wxTimer
+        interval: Math.max(60000, Config.weatherRefreshInterval)
+        repeat: true
+        running: sessionLock.locked && root.wLocation !== ""
+        triggeredOnStart: true
+        onTriggered: root.refreshWeather()
+    }
+
+    // ---------- shared state (all monitors) ----------
+    property string buffer: ""
+    property bool checking: false
+    property bool failed: false
+    property bool unlocking: false
+    property int failCount: 0
+    property int cooldown: 0
+    property bool pamRecord: false      // pam_faillock still has failures on record
+    property bool confirmArmed: false  // second enter confirms when it matters
+    readonly property bool lockedOut: cooldown > 0
+    readonly property bool pamRisky: pamRecord || failCount > 0
+    readonly property bool pamLocked: failCount >= 3
+    readonly property string statusText: {
+        if (unlocking)
+            return "welcome back";
+        if (pamLocked)
+            return "locked by pam \uf444 tap the arrow to reset";
+        if (lockedOut)
+            return "too many attempts \uf444 wait " + cooldown + "s";
+        if (checking)
+            return "verifying\u2026";
+        if (confirmArmed)
+            return "press enter again to submit";
+        if (failed)
+            return "wrong password \uf444 " + failCount + (failCount === 1 ? " attempt" : " attempts");
+        if (pamRisky)
+            return "pam counts earlier failures  \u00b7  enter again to submit";
+        return "enter to unlock \uf444 esc to clear";
+    }
+    readonly property string detectedWallpaper: {
+        let p = wpFile.text().split("\n")[0].trim();
+        if (p.startsWith("file://"))
+            p = p.slice(7);
+        return expandHome(p);
+    }
+    readonly property string wallpaper: envWallpaper !== "" ? envWallpaper : detectedWallpaper
+    signal shake
+
+    function pad(n) {
+        return String(n).padStart(2, "0");
+    }
+
+    function greeting() {
+        const h = clock.hours;
+        const t = h < 5 ? "burning the midnight oil" : h < 12 ? "good morning" : h < 17 ? "good afternoon" : h < 22 ? "good evening" : "late night";
+        return t + ", " + userName;
+    }
+
+    // same glyph set + colors as the shell
+    readonly property var batGlyphs: [0xf0083, 0xf007a, 0xf007d, 0xf007c, 0xf007d, 0xf007e, 0xf007f, 0xf0082, 0xf0081, 0xf0079]
+
+    function batteryGlyph(pct) {
+        if (!(pct >= 0))
+            return "";
+        const base = String.fromCodePoint(root.batGlyphs[Math.min(Math.floor(pct / 10), 9)]);
+        return root.batCharging ? base + String.fromCodePoint(0xf140b) : base;
+    }
+
+    function batteryColor(pct) {
+        return pct > 30 ? "#4bd25c" : (pct <= 15 ? "#e22323" : "#eecc47");
+    }
+
+    function onFailure() {
+        root.checking = false;
+        root.failed = true;
+        root.failCount++;
+        root.buffer = "";
+        root.confirmArmed = false;
+        root.shake();
+        // pam_faillock denies=3/unlock_time=900: one miss left means a slow down
+        root.cooldown = root.failCount === 1 ? 0 : (root.failCount === 2 ? 5 : 900);
+        refreshFailTally();
+    }
+
+    function submit() {
+        if (checking || unlocking || lockedOut || buffer.length === 0)
+            return;
+        if (pamLocked) {
+            resetPamTally();
+            return;
+        }
+        // once pam has a record, every submit has to be confirmed on purpose
+        if (pamRisky && !confirmArmed) {
+            confirmArmed = true;
+            confirmTimer.restart();
+            return;
+        }
+        confirmArmed = false;
+        checking = true;
+        failed = false;
+        pam.start();
+    }
+
+    function refreshFailTally() {
+        if (!faillockProc.running)
+            faillockProc.running = true;
+    }
+
+    function resetPamTally() {
+        resetProc.command = ["pkexec", "faillock", "--user", Quickshell.env("USER") || "root", "--reset"];
+        resetProc.running = true;
+    }
+
+    // ---------- theme ----------
+    // neutrals come from the shell's Theme.qml
+    QtObject {
+        id: th
+        readonly property color bg: Theme.bg
+        readonly property color fg: Theme.fg
+        readonly property color error: Theme.deleting
+        readonly property color surface: Theme.bgD1
+        readonly property color panel: Theme.bgD
+        readonly property color surfaceHi: Theme.bg4
+        readonly property color fieldBg: Theme.bg3
+        readonly property color stroke: Theme.borderBg2
+        readonly property color sub: Theme.fg4
+        readonly property color hi: Theme.fg3
+    }
+
+    // ---------- plumbing ----------
+    SystemClock {
+        id: clock
+        precision: SystemClock.Seconds
+    }
+
+    PamContext {
+        id: pam
+        config: root.pamConfig
+
+        onPamMessage: {
+            if (pam.responseRequired)
+                pam.respond(root.buffer);
+        }
+
+        onCompleted: result => {
+            if (result === PamResult.Success) {
+                root.checking = false;
+                root.unlocking = true;
+                root.failed = false;
+                root.cooldown = 0;
+                unlockTimer.start();
+            } else {
+                root.onFailure();
+            }
+        }
+
+        onError: root.onFailure()
+    }
+
+    // never let a silent pam hang wedge the screen in "verifying"
+    Timer {
+        id: pamWatchdog
+        interval: 10000
+        running: root.checking
+        onTriggered: if (root.checking) root.onFailure()
+    }
+
+    Timer {
+        id: confirmTimer
+        interval: 2500
+        onTriggered: root.confirmArmed = false
+    }
+
+    // counts the cooldown down once a second and clears the error state after
+    Timer {
+        id: cooldownTimer
+        interval: 1000
+        repeat: true
+        running: root.cooldown > 0
+        onTriggered: {
+            root.cooldown = Math.max(0, root.cooldown - 1);
+            if (root.cooldown === 0) {
+                root.failed = false;
+                refreshFailTally();
+            }
+        }
+    }
+
+    // forget old failures once the user stops typing for a while
+    Timer {
+        id: failReset
+        interval: 45000
+        onTriggered: {
+            root.failCount = 0;
+            root.failed = false;
+        }
+    }
+
+    Timer {
+        id: unlockTimer
+        interval: 480
+        onTriggered: {
+            sessionLock.locked = false;
+            if (root.oneshot)
+                quitTimer.start();
+        }
+    }
+
+    // give the compositor time to see the unlock before we exit
+    Timer {
+        id: quitTimer
+        interval: 400
+        onTriggered: Qt.quit()
+    }
+
+    // get the current wallpaper file path from ~/.cache/chillpill-shell
+    FileView {
+        id: wpFile
+        path: root.home + "/.cache/chillpill-shell/last_wallpaper"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+    }
+
+    Process {
+        id: powerProc
+    }
+
+    // pam_faillock keeps its tally for fail_interval seconds, across relocks and
+    // across shells, so the ui has to ask it instead of counting on its own
+    Process {
+        id: faillockProc
+        command: ["faillock", "--user", Quickshell.env("USER") || "root"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const rows = text.trim().split("\n").filter(l => /^\s*\d{4}-\d{2}-\d{2}/.test(l));
+                root.pamRecord = rows.length > 0;
+            }
+        }
+    }
+
+    // only used when pam has already locked us out (needs admin auth)
+    Process {
+        id: resetProc
+    }
+
+    // battery straight from sysfs (no upower daemon needed)
+    property real batPct: -1
+    property bool batCharging: false
+
+    Process {
+        id: batProc
+        running: root.showBattery
+        command: ["sh", "-c", 'for b in /sys/class/power_supply/BAT*; do [ -r "$b/capacity" ] || continue; echo "$(cat "$b/capacity") $(cat "$b/status")"; exit 0; done']
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = text.trim().split(" ");
+                const v = parseInt(p[0]);
+                if (p.length >= 2 && !isNaN(v)) {
+                    root.batPct = v;
+                    root.batCharging = p[1] === "Charging";
+                } else {
+                    root.batPct = -1;
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 30000
+        repeat: true
+        running: sessionLock.locked && root.showBattery
+        onTriggered: if (!batProc.running) batProc.running = true
+    }
+
+    IpcHandler {
+        target: "lock"
+        function lock(): void {
+            sessionLock.locked = true;
+        }
+    }
+
+    Component.onCompleted: {
+        if (root.oneshot)
+            sessionLock.locked = true;
+    }
+
+    // ---------- the lock ----------
+    WlSessionLock {
+        id: sessionLock
+
+        onLockedChanged: {
+            if (locked) {
+                root.buffer = "";
+                root.failed = false;
+                root.checking = false;
+                root.unlocking = false;
+                root.cooldown = 0;
+                root.confirmArmed = false;
+                confirmTimer.stop();
+                failReset.stop();
+                refreshFailTally();
+                wpFile.reload();
+                if (root.showBattery && !batProc.running)
+                    batProc.running = true;
+            }
+        }
+
+        WlSessionLockSurface {
+            id: lockSurface
+            color: "black"
+
+
+            Item {
+                id: scene
+                anchors.fill: parent
+                focus: true
+                // fade the whole scene in so engaging the lock is a transition, not a cut
+                opacity: root.unlocking ? 0 : scene.intro
+
+                // the compositor needs a moment to map the lock surface, animations
+                // started earlier would just play out behind a black screen
+                Timer {
+                    interval: 40
+                    running: lockSurface.visible
+                    onTriggered: scene.arm()
+                }
+
+                property bool armed: false
+                function arm() {
+                    if (scene.armed)
+                        return;
+                    scene.armed = true;
+                }
+
+                property real intro: 0
+                NumberAnimation on intro {
+                    running: scene.armed
+                    from: 0
+                    to: 1
+                    duration: 220
+                    easing.type: Easing.OutQuad
+                }
+
+                // pill bar -> card morph, then the staged reveal
+                property real openW: 0
+                property real openH: 0
+                readonly property real morph: Math.min(1, (openW + openH) / 2)
+                readonly property bool shown: scene.armed && !root.unlocking
+                onShownChanged: {
+                    if (shown) {
+                        closeAnim.stop();
+                        openAnim.restart();
+                    } else if (armed) {
+                        openAnim.stop();
+                        closeAnim.restart();
+                    }
+                }
+
+                // pops wide like the pill bar does, then drops open
+                ParallelAnimation {
+                    id: openAnim
+                    NumberAnimation { target: scene; property: "openW"; to: 1; duration: 380; easing.type: Easing.OutCubic }
+                    SequentialAnimation {
+                        PauseAnimation { duration: 100 }
+                        NumberAnimation { target: scene; property: "openH"; to: 1; duration: 440; easing.type: Easing.OutCubic }
+                    }
+                }
+
+                // unlock: card folds back into the pill before the scene fades
+                ParallelAnimation {
+                    id: closeAnim
+                    NumberAnimation { target: scene; property: "openH"; to: 0; duration: 300; easing.type: Easing.InOutCubic }
+                    SequentialAnimation {
+                        PauseAnimation { duration: 90 }
+                        NumberAnimation { target: scene; property: "openW"; to: 0; duration: 280; easing.type: Easing.InOutCubic }
+                    }
+                }
+                // content only shows once the shape is (almost) the card
+                readonly property real reveal: Math.max(0, Math.min(1, (openH - 0.55) / 0.45))
+
+                // 0 -> 1 entrance progress: blur-in + staggered reveal
+                property real enter: 0
+                NumberAnimation on enter {
+                    running: scene.armed
+                    from: 0
+                    to: 1
+                    duration: 950
+                    easing.type: Easing.OutCubic
+                }
+
+                property real contentIn: 0
+                SequentialAnimation {
+                    running: scene.armed
+                    PauseAnimation { duration: 180 }
+                    NumberAnimation { target: scene; property: "contentIn"; from: 0; to: 1; duration: 620; easing.type: Easing.OutCubic }
+                }
+
+                function stage(i) {
+                    return Math.max(0, Math.min(1, scene.contentIn * 1.5 - i * 0.25));
+                }
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+                }
+
+                Component.onCompleted: forceActiveFocus()
+
+                Keys.onPressed: event => {
+                    event.accepted = true;
+                    if (root.checking || root.unlocking)
+                        return;
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        root.submit();
+                        return;
+                    }
+                    if (root.lockedOut || root.pamLocked)
+                        return;
+                    root.confirmArmed = false;
+                    if (event.key === Qt.Key_Backspace) {
+                        root.buffer = root.buffer.slice(0, -1);
+                    } else if (event.key === Qt.Key_Escape
+                               || (event.key === Qt.Key_U && (event.modifiers & Qt.ControlModifier))) {
+                        root.buffer = "";
+                    } else if (event.text.length > 0 && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))) {
+                        const ch = event.text.charCodeAt(0);
+                        if (ch >= 32 && ch !== 127) {
+                            root.buffer += event.text;
+                            root.failed = false;
+                            failReset.restart();
+                        }
+                    }
+                }
+
+                // ----- background: gradient fallback, blurred wallpaper on top -----
+                Rectangle {
+                    anchors.fill: parent
+                    color: th.bg
+                }
+
+                Image {
+                    anchors.fill: parent
+                    source: root.wallpaper !== "" ? "file://" + encodeURI(root.wallpaper) : ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    sourceSize.width: 1920
+                    scale: 1.10          // hides the dark edge the blur leaves behind
+                    opacity: status === Image.Ready ? 1 : 0
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 220 }
+                    }
+
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        autoPaddingEnabled: false
+                        blurEnabled: true
+                        blurMax: 30
+                        blur: Math.min(1, scene.enter * 1.35)
+                        saturation: 0.03
+                        brightness: -0.12
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Qt.rgba(th.bg.r, th.bg.g, th.bg.b, 0.28)
+                }
+
+                // ----- reusable bits -----
+                component T: Text {
+                    font.family: root.textFont
+                    color: th.fg
+                    font.pixelSize: 16   // Monocraft is a pixel font: stick to multiples of 8 (16/24/80...)
+                    renderType: Text.NativeRendering
+                }
+
+                // Nerd Font icon
+                component I: Text {
+                    font.family: root.nerdFont
+                    color: th.fg
+                    font.pixelSize: 16
+                    renderType: Text.NativeRendering
+                }
+
+                component Pill: Rectangle {
+                    id: pill
+                    default property alias content: row.data
+                    property bool interactive: false
+                    property color accent: th.hi
+                    property bool highlighted: false
+                    readonly property bool hovered: area.containsMouse
+                    signal clicked
+
+                    implicitWidth: row.implicitWidth + 32
+                    implicitHeight: 40
+                    width: implicitWidth
+                    height: implicitHeight
+                    radius: 14
+                    color: highlighted ? Qt.rgba(th.error.r, th.error.g, th.error.b, 0.40)
+                        : hovered && interactive ? th.surfaceHi
+                        : th.panel
+                    border.width: highlighted || (hovered && interactive) ? 1.5 : 1
+                    border.color: highlighted ? pill.accent : (hovered && interactive ? pill.accent : th.stroke)
+                    scale: (area.pressed ? 0.92 : (hovered && interactive ? 1.03 : 1))
+
+                    Behavior on color {
+                        ColorAnimation { duration: 140 }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: 160 }
+                    }
+                    Behavior on scale {
+                        NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on width {
+                        NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                    }
+
+                    RowLayout {
+                        id: row
+                        anchors.centerIn: parent
+                        spacing: 8
+                    }
+
+                    MouseArea {
+                        id: area
+                        anchors.fill: parent
+                        enabled: pill.interactive
+                        hoverEnabled: true
+                        cursorShape: pill.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: pill.clicked()
+                    }
+                }
+
+                // click once to arm (red, "sure?"), click again to fire; skips arming if confirmPowerActions is false
+                component PowerPill: Pill {
+                    id: pp
+                    property string glyph: ""
+                    property var cmd: []
+                    property bool armed: false
+
+                    interactive: true
+                    highlighted: armed
+
+                    onClicked: {
+                        if (armed || !root.confirmPower) {
+                            armTimer.stop();
+                            armed = false;
+                            powerProc.command = cmd;
+                            powerProc.running = true;
+                        } else {
+                            armed = true;
+                            armTimer.restart();
+                        }
+                    }
+
+                    Timer {
+                        id: armTimer
+                        interval: 2600
+                        onTriggered: pp.armed = false
+                    }
+
+                    I { text: pp.glyph; color: (pp.hovered || pp.armed) ? pp.accent : th.fg }
+                    T { text: "sure?"; visible: pp.armed }
+                }
+
+                // ----- everything below lives in a resolution-scaled layer -----
+                Item {
+                    id: ui
+                    readonly property real k: root.dpiScale   // no resolution scaling: scaling blurs pixel fonts
+                    width: scene.width / k
+                    height: scene.height / k
+                    scale: k
+                    transformOrigin: Item.TopLeft
+
+                    // the box (shakes on a wrong password)
+                    Item {
+                        id: boxWrap
+                        property real shakeOff: 0
+                        width: box.width
+                        height: box.height
+                        x: (ui.width - width) / 2 + shakeOff
+                        y: (ui.height - height) / 2
+                        opacity: Math.min(1, scene.morph * 8)
+                        scale: 0.985 + 0.015 * scene.morph
+
+                        Connections {
+                            target: root
+                            function onShake() { shakeAnim.restart(); }
+                        }
+
+                        SequentialAnimation {
+                            id: shakeAnim
+                            NumberAnimation { target: boxWrap; property: "shakeOff"; to: -22; duration: 50 }
+                            NumberAnimation { target: boxWrap; property: "shakeOff"; to: 20; duration: 70 }
+                            NumberAnimation { target: boxWrap; property: "shakeOff"; to: -12; duration: 70 }
+                            NumberAnimation { target: boxWrap; property: "shakeOff"; to: 6; duration: 60 }
+                            NumberAnimation { target: boxWrap; property: "shakeOff"; to: 0; duration: 60 }
+                        }
+
+                        RectangularShadow {
+                            visible: Config.showShadows
+                            anchors.fill: box
+                            radius: box.radius
+                            blur: 18 + 32 * scene.morph
+                            spread: 1 + 2 * scene.morph
+                            offset: Qt.vector2d(0, 4 + 14 * scene.morph)
+                            color: Qt.rgba(0, 0, 0, 0.5)
+                            opacity: Math.min(1, scene.morph * 2.5)
+                        }
+
+                        Rectangle {
+                            id: box
+                            clip: true
+                            readonly property real finalW: 800
+                            readonly property real finalH: col.implicitHeight + 36
+                            readonly property real finalR: 30
+
+                            width: root.pillW + (finalW - root.pillW) * scene.openW
+                            height: root.pillH + (finalH - root.pillH) * scene.openH
+                            radius: root.pillR + (finalR - root.pillR) * Math.min(1, scene.openH)
+                            color: th.surface
+                            border.width: 1
+                            border.color: th.stroke
+
+                            Column {
+                                id: col
+                                x: 18
+                                y: 18
+                                width: box.finalW - 36
+                                spacing: 14
+                                opacity: scene.reveal
+
+                                Row {
+                                    id: panels
+                                    width: parent.width
+                                    height: 320
+                                    spacing: 16
+
+                                    // ---- left: clock ----
+                                    Rectangle {
+                                        id: leftP
+                                        width: 360
+                                        height: parent.height
+                                        radius: 20
+                                        color: th.panel
+                                        border.width: 1
+                                        border.color: th.stroke
+                                        opacity: scene.stage(1)
+                                        transform: Translate { x: (1 - scene.stage(1)) * -16 }
+
+                                        Column {
+                                            anchors.centerIn: parent
+                                            width: parent.width - 48
+                                            spacing: 8
+
+                                            T {
+                                                width: parent.width
+                                                height: 110
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                                text: Qt.formatDateTime(clock.date, root.clockFmt)
+                                                font.pixelSize: 55
+                                                fontSizeMode: Text.Fit
+                                                minimumPixelSize: 30
+                                            }
+
+                                            T {
+                                                width: parent.width
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: Qt.formatDateTime(clock.date, "dddd, d MMMM")
+                                                font.pixelSize: 22
+                                                color: th.sub
+                                            }
+
+                                            Item { width: 1; height: 10 }
+
+                                            T {
+                                                width: parent.width
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: root.greeting()
+                                                font.pixelSize: 15
+                                                color: th.hi
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+                                    }
+
+                                    // ---- right: login ----
+                                    Rectangle {
+                                        id: rightP
+                                        width: parent.width - leftP.width - parent.spacing
+                                        height: parent.height
+                                        radius: 20
+                                        color: th.panel
+                                        border.width: 1
+                                        border.color: th.stroke
+                                        opacity: scene.stage(1)
+                                        transform: Translate { x: (1 - scene.stage(1)) * 16 }
+
+                                        Column {
+                                            anchors.centerIn: parent
+                                            width: parent.width - 48
+                                            spacing: 14
+
+                                            ClippingRectangle {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                width: 104
+                                                height: 104
+                                                radius: 52
+                                                color: th.hi
+
+                                                T {
+                                                    anchors.centerIn: parent
+                                                    text: root.userName.charAt(0).toUpperCase()
+                                                    color: th.bg
+                                                    font.pixelSize: 48
+                                                    font.weight: Font.Bold
+                                                }
+
+                                                Image {
+                                                    anchors.fill: parent
+                                                    source: root.avatarPath !== "" ? "file://" + encodeURI(root.avatarPath) : ""
+                                                    fillMode: Image.PreserveAspectCrop
+                                                    asynchronous: true
+                                                    visible: status === Image.Ready
+                                                }
+                                            }
+
+                                            T {
+                                                width: parent.width
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: root.userName
+                                                font.pixelSize: 24
+                                            }
+
+                                            // password pill
+                                            Rectangle {
+                                                id: field
+                                                width: parent.width
+                                                height: 44
+                                                radius: height / 2
+                                                color: Qt.rgba(th.fg.r, th.fg.g, th.fg.b, 0.10)
+                                                border.width: 1
+                                                border.color: (root.failed || root.lockedOut) ? th.error : Qt.rgba(th.fg.r, th.fg.g, th.fg.b, 0.06)
+
+                                                Behavior on border.color {
+                                                    ColorAnimation { duration: 200 }
+                                                }
+
+                                                SequentialAnimation {
+                                                    id: typePulse
+                                                    NumberAnimation { target: field; property: "scale"; to: 1.012; duration: 90; easing.type: Easing.OutQuad }
+                                                    NumberAnimation { target: field; property: "scale"; to: 1; duration: 160; easing.type: Easing.OutQuad }
+                                                }
+
+                                                Connections {
+                                                    target: root
+                                                    function onBufferChanged() {
+                                                        if (root.buffer.length > 0)
+                                                            typePulse.restart();
+                                                    }
+                                                }
+
+                                                // centered placeholder, fades out once you type
+                                                T {
+                                                    anchors.centerIn: parent
+                                                    text: "Enter Password"
+                                                    color: th.sub
+                                                    font.pixelSize: 16
+                                                    opacity: root.buffer.length === 0 ? 0.85 : 0
+                                                    Behavior on opacity {
+                                                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                                    }
+                                                }
+
+                                                Item {
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: 46
+                                                    anchors.rightMargin: 46
+                                                    clip: true
+
+                                                    Row {
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        spacing: 6
+
+                                                        Repeater {
+                                                            model: Math.min(root.buffer.length, 14)
+
+                                                            // minimal bullets
+                                                            Rectangle {
+                                                                required property int index
+
+                                                                readonly property int age: Math.min(root.buffer.length, 14) - 1 - index
+
+                                                                width: 9
+                                                                height: 9
+                                                                radius: 4.5
+                                                                color: root.failed ? th.error
+                                            : Qt.rgba(th.hi.r, th.hi.g, th.hi.b, Math.max(0.55, 1 - age * 0.07))
+
+                                                                property real pop: 0
+                                                                opacity: 0.55 + 0.45 * pop
+                                                                scale: 0.78 + 0.22 * pop
+
+                                                                NumberAnimation on pop {
+                                                                    from: 0
+                                                                    to: 1
+                                                                    duration: 320
+                                                                    easing.type: Easing.OutCubic
+                                                                }
+
+                                                                Behavior on color {
+                                                                    ColorAnimation { duration: 180 }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                // arrow -> spinner -> check, only shows up once there is something to submit
+                                                Rectangle {
+                                                    id: goBtn
+                                                    readonly property bool live: root.buffer.length > 0 || root.checking || root.unlocking || root.pamLocked
+                                                    width: 30
+                                                    height: 30
+                                                    radius: 15
+                                                    anchors.right: parent.right
+                                                    anchors.rightMargin: 7
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    color: th.hi
+                                                    opacity: live ? (root.lockedOut ? 0.4 : 1) : 0
+                                                    scale: goArea.pressed ? 0.9 : (live ? 1 : 0.6)
+
+                                                    Behavior on opacity {
+                                                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                                    }
+                                                    Behavior on scale {
+                                                        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                                                    }
+
+                                                    I {
+                                                        id: goIcon
+                                                        anchors.centerIn: parent
+                                                        text: root.unlocking ? "\uf00c" : root.checking ? "\uf110" : root.pamLocked ? "\uf023" : "\uf061"
+                                                        color: th.bg
+                                                        font.pixelSize: 16
+
+                                                        NumberAnimation on rotation {
+                                                            running: root.checking
+                                                            from: 0
+                                                            to: 360
+                                                            duration: 900
+                                                            loops: Animation.Infinite
+                                                            onRunningChanged: if (!running) goIcon.rotation = 0
+                                                        }
+                                                    }
+
+                                                    MouseArea {
+                                                        id: goArea
+                                                        anchors.fill: parent
+                                                        enabled: goBtn.live && !root.lockedOut
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            root.submit();
+                                                            scene.forceActiveFocus();
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            RowLayout {
+                                                width: parent.width
+                                                spacing: 6
+
+                                                I {
+                                                    visible: root.failed || root.lockedOut
+                                                    text: "\uf071"
+                                                    color: th.error
+                                                    font.pixelSize: 16
+                                                    Layout.alignment: Qt.AlignVCenter
+                                                }
+
+                                                T {
+                                                    Layout.fillWidth: true
+                                                    Layout.alignment: Qt.AlignVCenter
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                    wrapMode: Text.WordWrap
+                                                    font.pixelSize: 12
+                                                    color: (root.failed || root.lockedOut) ? th.error : th.sub
+                                                    text: root.statusText
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // ---- bottom strip: weather + battery left, power right ----
+                                Item {
+                                    id: bottomBar
+                                    width: parent.width
+                                    height: 48
+                                    opacity: scene.stage(2)
+                                    transform: Translate { y: (1 - scene.stage(2)) * 10 }
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 8
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 10
+
+                                        Pill {
+                                            visible: root.wOk
+
+                                            I { text: root.wGlyph; color: root.wGlyphColor; font.pixelSize: 24; height: 20; verticalAlignment: Text.AlignVCenter }
+                                            T { text: Math.round(root.wTemp) + root.wUnit; height: 20; verticalAlignment: Text.AlignVCenter }
+                                        }
+
+                                        Pill {
+                                            visible: root.showBattery && root.batPct >= 0
+
+                                            I { text: root.batteryGlyph(root.batPct); color: root.batteryColor(root.batPct); font.pixelSize: 24; height: 20; verticalAlignment: Text.AlignVCenter }
+                                            T { text: root.batPct + "%"; height: 20; verticalAlignment: Text.AlignVCenter }
+                                        }
+                                    }
+
+                                    Row {
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: 8
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 10
+
+                                        PowerPill { glyph: "\uf186"; accent: "#9d6fff"; cmd: ["systemctl", "suspend"] }
+                                        PowerPill { glyph: "\uf021"; accent: "#ff6b35"; cmd: ["systemctl", "reboot"] }
+                                        PowerPill { glyph: "\uf011"; accent: "#d62828"; cmd: ["systemctl", "poweroff"] }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

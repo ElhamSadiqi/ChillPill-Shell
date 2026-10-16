@@ -21,12 +21,12 @@ into your session at all times. It's not bound to any dotfiles.
 [![Showcase](https://img.shields.io/badge/Showcase-252525?style=flat-square)](#showcase)
 [![Features](https://img.shields.io/badge/Features-252525?style=flat-square)](#features-pill-states)
 [![Configuration](https://img.shields.io/badge/Configuration%20App-252525?style=flat-square)](#configuration-app)
-[![Custom Modules](https://img.shields.io/badge/Custom%20Modules-252525?style=flat-square)](#custom-pill-modules)
+[![Extras](https://img.shields.io/badge/Extras-252525?style=flat-square)](#lockscreen)
 [![Dependencies](https://img.shields.io/badge/Dependencies-252525?style=flat-square)](#dependencies)
 [![Installation](https://img.shields.io/badge/Installation-252525?style=flat-square)](#install)
 [![Auto Startup](https://img.shields.io/badge/Auto%20Startup-252525?style=flat-square)](#auto-startup)
 [![Key Bindings](https://img.shields.io/badge/Key%20Bindings-252525?style=flat-square)](#key-bindings)
-[![Acknowledgements](https://img.shields.io/badge/Acknowledgements-252525?style=flat-square)](#contributors)
+[![Acknowledgements](https://img.shields.io/badge/Acknowledgements-252525?style=flat-square)](#co-cookers)
 
 </div>
 
@@ -200,7 +200,38 @@ into your session at all times. It's not bound to any dotfiles.
 
 <img src="screenshots/config-app.webp" width="100%" alt="GUI Config App for ChillPill-Shell">
 
-</details>
+## Lockscreen
+> Default lockscreen app - authenticates through PAM's `login` service and uses the
+> Wayland session-lock protocol, so it is safe on Wayland compositors (Hyprland, Sway, river etc.)
+
+<img src="screenshots/lockscreen.webp" width="100%" alt="Lockscreen App of ChillPill-Shell">
+
+### Running it
+
+Power menu's **Lock** action and any keybind using that config option use:
+
+```bash
+chillpill-lock                                     # lock now, quits after you unlock
+LOCK_WALLPAPER=~/Pictures/wall.png chillpill-lock  # lock with a specific wallpaper
+```
+
+### Environment variables
+
+| Variable | Effect |
+|---|---|
+| `LOCK_NOW=1` | Lock immediately on start and quit after unlocking (what `chillpill-lock` does) |
+| `LOCK_WALLPAPER=<path>` | Use this image instead of the detected one (blurred behind the card) |
+
+> [!WARNING]
+> Never `kill` a running lockscreen instance. Destroying a session-lock surface while locked makes Hyprland drop to
+> its pookie crash lockscreen. Unlock it properly, or quit the process only while it is idle in standby.
+
+### Config
+
+No separate lock config, it reads `~/.config/chillpill-shell/config.jsonc` and the palette through `Theme.qml`,
+so these existing options apply: `displayPicture`, `textFontFamily`, `nerdFontFamily`, `dpiScale`, `showShadows` etc.
+
+The wallpaper is `$LOCK_WALLPAPER`, else `~/.cache/chillpill-shell/last_wallpaper`.
 
 ## Custom Pill Modules
 
@@ -372,14 +403,14 @@ qs ipc -p /usr/share/chillpill-shell call <target> <toggle|show|hide>
 
 ---
 
-### Contributors
+### Co-cookers
 
-Thanks to the contributors who helped make the shell better, and special thanks to [enhaoswen](https://github.com/enhaoswen) for the Wi-Fi controller backend for Quickshell.
+Thanks to the Co-cookers (contributors) who helped make the shell better and are continuing it, and special thanks to [enhaoswen](https://github.com/enhaoswen) for the Wi-Fi controller backend for Quickshell.
 
 <a href="https://github.com/LUCKYS1NGHH/chillpill-shell/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=LUCKYS1NGHH/chillpill-shell" width="170" />
+  <img src="https://contrib.rocks/image?repo=LUCKYS1NGHH/chillpill-shell" width="220" />
 </a>
 
-### Author
+### Cooked by
 
 LUCKYS1NGHH / https://github.com/LUCKYS1NGHH/ChillPill-Shell
