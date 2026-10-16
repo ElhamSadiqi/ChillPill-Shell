@@ -8,8 +8,25 @@ import QtQuick.Layouts
 Item {
   id: root
 
+  property var username: Quickshell.env("USER") || "IDK YOU"
+  property string hostname: Quickshell.env("HOST") || ""
+
   signal toggleCalendar()
   signal toggleWeather()
+
+  // hostname, fetched only when not already in the environment
+  Process {
+    id: hostnameProc
+    command: ["sh", "-c", "cat /etc/hostname"]
+    running: root.hostname === ""
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const name = this.text.trim()
+        if (name !== "") root.hostname = name
+        hostnameProc.running = false
+      }
+    }
+  }
 
   RowLayout {
    // profile picture (display picture)
@@ -34,26 +51,6 @@ Item {
         smooth: true
         mipmap: true
         sourceSize: Qt.size(avatarSize, avatarSize)
-      }
-    }
-
-    // username
-    Process {
-      id: whoamiProc
-      command: ["sh", "-c", 'whoami']
-      running: true
-      stdout: StdioCollector {
-        onStreamFinished: { whoamiText.text = this.text.trim(); whoamiProc.running = false }
-      }
-    }
-
-    // hostname
-    Process {
-      id: hostnameProc
-      command: ["sh", "-c", "cat /etc/hostname"]
-      running: true
-      stdout: StdioCollector {
-        onStreamFinished: { hostnameText.text = "(" + this.text.trim() + ")"; hostnameProc.running = false }
       }
     }
 
@@ -86,14 +83,14 @@ Item {
 
       RowLayout {
         Text {
-          id: whoamiText
+          text: username
           color: Theme.fg
           Layout.leftMargin: 10
           font { family: Theme.fontFamily; pixelSize: 14; weight: 600 }
         }
 
         Text {
-          id: hostnameText
+          text: "(" + hostname + ")"
           color: Theme.fg5
           Layout.topMargin: 2
           font { family: Theme.fontFamily; pixelSize: 9; weight: 400 }
