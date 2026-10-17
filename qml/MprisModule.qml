@@ -38,7 +38,7 @@ Item {
 
     property real polledPosition: 0
     property real polledLength: 0
-    readonly property real progress: polledLength > 0 ? polledPosition / polledLength : 0
+    readonly property real progress: polledLength > 0 ? Math.min(polledPosition / polledLength, 1) : 0
 
     function pollProgress() {
         if (!activePlayer) {
@@ -48,7 +48,10 @@ Item {
         }
 
         root.polledPosition = Number(activePlayer.position) || 0
-        root.polledLength = activePlayer.lengthSupported ? (Number(activePlayer.length) || 0) : 0
+
+        // live streams can report a sentinel/garbage duration instead of omitting it
+        let totalLen = activePlayer.lengthSupported ? Number(activePlayer.length) || 0 : 0
+        root.polledLength = totalLen > 0 && totalLen <= 86400 ? totalLen : 0
     }
 
     Timer {
