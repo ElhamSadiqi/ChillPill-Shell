@@ -60,6 +60,12 @@ Singleton {
       property bool cliphistFuzzySearch: false
       // Spotlight "?" mode template, %s is replaced by the url-encoded query
       property string webSearchUrl: "https://duckduckgo.com/?q=%s"
+      // media feature scopes: "both" | "controlCenter" | "lockscreen" | "none"
+      property string mediaCoverBackground: ""
+      property string mediaMarqueeText: ""
+      property string mediaSeekBar: ""
+      property string mediaTimes: ""
+      property string mediaTransport: ""
       property bool iWantMediaCoverInBackground: false
       property bool marqueeMediaText: false
       property bool iNeedMediaPlayingPopup: true
@@ -110,6 +116,32 @@ Singleton {
   readonly property alias appLauncherFuzzySearch: adapter.appLauncherFuzzySearch
   readonly property alias cliphistFuzzySearch: adapter.cliphistFuzzySearch
   readonly property alias webSearchUrl: adapter.webSearchUrl
+  // empty scope key -> fall back to the legacy boolean (cover/marquee) or "both"
+  function mediaScope(key, legacyDefault) {
+    const v = adapter[key]
+    if (v !== undefined && v !== null && v !== "")
+      return v
+    return legacyDefault
+  }
+
+  readonly property string mediaCoverBackgroundScope: mediaScope("mediaCoverBackground", iWantMediaCoverInBackground ? "both" : "none")
+  readonly property string mediaMarqueeTextScope: mediaScope("mediaMarqueeText", marqueeMediaText ? "both" : "none")
+  readonly property string mediaSeekBarScope: mediaScope("mediaSeekBar", "both")
+  readonly property string mediaTimesScope: mediaScope("mediaTimes", "both")
+  readonly property string mediaTransportScope: mediaScope("mediaTransport", "both")
+
+  // host is "controlCenter" or "lockscreen"
+  function mediaOn(scope, host) {
+    if (scope === "both") return true
+    if (scope === "none" || scope === undefined || scope === null || scope === "") return false
+    return scope === host
+  }
+
+  readonly property alias mediaCoverBackground: adapter.mediaCoverBackground
+  readonly property alias mediaMarqueeText: adapter.mediaMarqueeText
+  readonly property alias mediaSeekBar: adapter.mediaSeekBar
+  readonly property alias mediaTimes: adapter.mediaTimes
+  readonly property alias mediaTransport: adapter.mediaTransport
   readonly property alias iWantMediaCoverInBackground: adapter.iWantMediaCoverInBackground
   readonly property alias marqueeMediaText: adapter.marqueeMediaText
   readonly property alias iNeedMediaPlayingPopup: adapter.iNeedMediaPlayingPopup

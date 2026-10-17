@@ -8,7 +8,13 @@ Rectangle {
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    height: mprisModule.hasPlayer ? 118 : 0
+    // with no progress row at all (no seek bar, no time labels) the card can drop
+    // by the height that row used: 3px bar + 8px spacing + 12px times = 23px
+    readonly property real heightWithBar: 118
+    readonly property real heightNoBar: 96
+    readonly property real cardHeight: (wantSeekBar || wantTimes) ? heightWithBar : heightNoBar
+
+    height: mprisModule.hasPlayer ? cardHeight : 0
     radius: 16
     color: Theme.bgD
     visible: height > 0
@@ -24,6 +30,17 @@ Rectangle {
     property bool active: true
     // handy for hosts (the lockscreen) that want to react to the card appearing
     readonly property bool hasPlayer: mprisModule.hasPlayer
+    // which surface is showing this card; the per-feature scopes are resolved
+    // against it. Set to "lockscreen" by Lockscreen.qml.
+    property string host: "controlCenter"
+
+    readonly property bool wantCoverBg: Config.mediaOn(Config.mediaCoverBackgroundScope, host)
+    readonly property bool wantMarquee: Config.mediaOn(Config.mediaMarqueeTextScope, host)
+    // these three are control-center furniture: always there in the control center,
+    // and only the locksceen follows the scope switch
+    readonly property bool wantSeekBar: host !== "lockscreen" || Config.mediaOn(Config.mediaSeekBarScope, host)
+    readonly property bool wantTimes: host !== "lockscreen" || Config.mediaOn(Config.mediaTimesScope, host)
+    readonly property bool wantTransport: host !== "lockscreen" || Config.mediaOn(Config.mediaTransportScope, host)
     // audio visualiser feed; the shell owns the cava pipe and pushes the values
     // in. Left alone (empty/not available) the visualiser simply stays hidden,
     // which is what the lockscreen wants.
@@ -31,7 +48,7 @@ Rectangle {
     property bool cavaAvailable: false
 
     // MPRIS is a bus client, so having our own instance here is harmless and
-    // makes this file usable from the lockscreen too (its own qs process)
+    // makes this file usable from the lockscreen too (its own qs procss)
     MprisModule {
         id: mprisModule
     }
@@ -248,16 +265,15 @@ Rectangle {
         }
     }
 
-    // fixed-size wrapper so the open/close animation reveals the content instead of squashing it
+    // everything inside the card. it follows the card's live height (a fixed 118
+    // made it overflow the short card and stack with its shadow)
     Item {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 118
-        opacity: Math.min(1, mediaCard.height / 118)
+        anchors.fill: parent
 
-        // cover-art wash, fading out to the right (Config.iWantMediaCoverInBackground toggle)
+        // the wash itself is optional: hiding the *wrapper* would take the title,
+        // artist and controls with it, so only this layer follows the scope
         ClippingRectangle {
+            visible: mediaCard.wantCoverBg
             anchors.fill: parent
             anchors.margins: mediaCard.border.width
             radius: mediaCard.radius - mediaCard.border.width
@@ -265,7 +281,7 @@ Rectangle {
 
             CrossfadeImage {
                 anchors.fill: parent
-                source: Config.iWantMediaCoverInBackground ? mprisModule.artUrl : ""
+                source: mediaCard.wantCoverBg ? mprisModule.artUrl : ""
                 sourceSize: Qt.size(128, 128)
                 maxOpacity: 0.12
                 fadeDuration: 350
@@ -282,11 +298,14 @@ Rectangle {
         }
 
         Column {
-            anchors.fill: parent
-            // driven by `margin` so the same card can be inset tighter where it
-            // is narrower (the lockscreen clock box). default 16 keeps the
-            // control center looking exactly as before
-            anchors.margins: mediaCard.margin
+            id: cardColumn
+            // `margin` drives the inset (default 16 keeps the control center
+            // looking exactly as before). the block is centred vertically instead
+            // of top-aligned, so when the progress row is hidden the remaining
+            // art/title block sits in the middle of the shorter card
+            x: mediaCard.margin
+            y: Math.max(mediaCard.margin, (mediaCard.height - implicitHeight) / 2)
+            width: mediaCard.width - mediaCard.margin * 2
             spacing: Math.max(8, mediaCard.margin - 1)
 
             // top row -> art + info + controls
@@ -325,14 +344,19 @@ Rectangle {
                 // track + artist
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(0, parent.width - artBox.width - controls.width - parent.spacing * 2)
+                    // give the reserved space back to the text when the transport
+                    // buttons are hidden (Row keeps its width while invisible)
+                    width: Math.max(0, parent.width - artBox.width
+                                    - (controls.visible ? controls.width : 0)
+                                    - parent.spacing * 2)
                     spacing: 4
 
                     // title: marquee when Config.marqueeMediaText, else elided text
                     Item {
                         id: titleHolder
                         width: parent.width
-                        height: 15
+                        // two lines when wrapping, single line for the marquee
+                        height: mediaCard.wantMarquee ? 15 : 28
 
                         Text {
                             id: titleText
@@ -342,8 +366,11 @@ Rectangle {
                             font.pixelSize: 12
                             font.weight: 600
                             font.family: Theme.fontFamily
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
                             elide: Text.ElideRight
-                            visible: !Config.marqueeMediaText
+                            verticalAlignment: Text.AlignVCenter
+                            visible: !mediaCard.wantMarquee
                             onTextChanged: titleSwap.restart()
                         }
 
@@ -352,7 +379,7 @@ Rectangle {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: Config.marqueeMediaText
+                            visible: mediaCard.wantMarquee
                             maxWidth: width
                             text: mprisModule.track !== "" ? mprisModule.track : "Nothing playing"
                             color: Theme.fgL
@@ -377,7 +404,7 @@ Rectangle {
                     Item {
                         id: artistHolder
                         width: parent.width
-                        height: 13
+                        height: mediaCard.wantMarquee ? 13 : 22
 
                         Text {
                             id: artistText
@@ -387,8 +414,10 @@ Rectangle {
                             font.pixelSize: artistFontSize
                             font.weight: artistFontWeight
                             font.family: Theme.fontFamily
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
                             elide: Text.ElideRight
-                            visible: !Config.marqueeMediaText
+                            visible: !mediaCard.wantMarquee
                             onTextChanged: artistSwap.restart()
                         }
 
@@ -397,7 +426,7 @@ Rectangle {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: Config.marqueeMediaText
+                            visible: mediaCard.wantMarquee
                             maxWidth: width
                             text: mprisModule.artist
                             color: mediaCard.artistFontColor
@@ -424,6 +453,7 @@ Rectangle {
                 // controls
                 Row {
                     id: controls
+                    visible: mediaCard.wantTransport
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
 
@@ -459,11 +489,13 @@ Rectangle {
             // progress bar + time
             Column {
                 width: parent.width
-                spacing: 8
+                spacing: mediaCard.wantTimes ? 8 : 0
+                visible: mediaCard.wantSeekBar || mediaCard.wantTimes
 
                 // layout slot stays 3px tall; visuals and hit area overflow it
                 Item {
                     id: barSlot
+                    visible: mediaCard.wantSeekBar
                     width: parent.width
                     height: 3
 
@@ -543,6 +575,7 @@ Rectangle {
                 }
 
                 Item {
+                    visible: mediaCard.wantTimes
                     width: parent.width
                     height: 12
 

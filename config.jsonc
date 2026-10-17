@@ -43,7 +43,11 @@
   "appLauncherFuzzySearch": false,
   "cliphistFuzzySearch": false,
   "webSearchUrl": "https://duckduckgo.com/?q=%s",
-  "iWantMediaCoverInBackground": false,
+  "mediaCoverBackground": "",
+  "mediaMarqueeText": "",
+  "mediaSeekBar": "",
+  "mediaTimes": "",
+  "mediaTransport": "",
   "marqueeMediaText": false,
   "iNeedMediaPlayingPopup": true
 }

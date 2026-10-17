@@ -842,6 +842,7 @@ Scope {
 
                                                 MediaPlayer {
                                                     id: mediaCard
+                                                    host: "lockscreen"
                                                     width: parent.width
                                                     radius: 18
                                                     margin: 16

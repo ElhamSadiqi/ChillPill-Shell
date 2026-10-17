@@ -78,5 +78,5 @@ Singleton {
     readonly property int durMed: 180
 
     readonly property int fontSizeBase: 13
-    readonly property int fontSize: Math.round(fontSizeBase * Config.pillScale)
+    readonly property int fontSize: Math.round(fontSizeBase * ConfigStore.get("pillScale", 1))
 }

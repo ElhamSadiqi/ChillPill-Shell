@@ -21,7 +21,7 @@ into your session at all times. It's not bound to any dotfiles.
 [![Showcase](https://img.shields.io/badge/Showcase-252525?style=flat-square)](#showcase)
 [![Features](https://img.shields.io/badge/Features-252525?style=flat-square)](#features-pill-states)
 [![Configuration](https://img.shields.io/badge/Configuration%20App-252525?style=flat-square)](#configuration-app)
-[![Extras](https://img.shields.io/badge/Extras-252525?style=flat-square)](#lockscreen)
+[![Extras](https://img.shields.io/badge/Extras-252525?style=flat-square)](#lockscreen-optional)
 [![Dependencies](https://img.shields.io/badge/Dependencies-252525?style=flat-square)](#dependencies)
 [![Installation](https://img.shields.io/badge/Installation-252525?style=flat-square)](#install)
 [![Auto Startup](https://img.shields.io/badge/Auto%20Startup-252525?style=flat-square)](#auto-startup)
@@ -200,7 +200,7 @@ into your session at all times. It's not bound to any dotfiles.
 
 <img src="screenshots/config-app.webp" width="100%" alt="GUI Config App for ChillPill-Shell">
 
-## Lockscreen
+## Lockscreen (Optional)
 > Default lockscreen app - authenticates through PAM's `login` service and uses the
 > Wayland session-lock protocol, so it is safe on Wayland compositors (Hyprland, Sway, river etc.)
 

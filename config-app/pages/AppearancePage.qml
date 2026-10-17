@@ -15,6 +15,17 @@ Page {
     NumRow { label: "Pill bottom margin"; to: 200; suffix: "px"; value: ConfigStore.get("pillBottomMargin", 26); onEdited: (v) => ConfigStore.set("pillBottomMargin", v) }
     ToggleRow { label: "Audio visualizer"; hint: "Live spectrum in the Control Center's Media Player";  value: ConfigStore.get("showAudioVisuals", true); onEdited: (v) => ConfigStore.set("showAudioVisuals", v) }
     ToggleRow { label: "Shadows"; hint: "Drop shadows under the Pill Bar, its popups and the lockscreen"; value: ConfigStore.get("showShadows", true); onEdited: (v) => ConfigStore.set("showShadows", v) }
-    ToggleRow { label: "Media cover in media player's background"; hint: "Faded cover art in Control center's media player of the current media playing"; value: ConfigStore.get("iWantMediaCoverInBackground", false); onEdited: (v) => ConfigStore.set("iWantMediaCoverInBackground", v) }
-    ToggleRow { label: "Marquee media text"; hint: "Scroll long track titles and artist names in the Control Center's Media Player"; value: ConfigStore.get("marqueeMediaText", false); onEdited: (v) => ConfigStore.set("marqueeMediaText", v) }
+    Heading { text: "MEDIA PLAYER" }
+    ScopeRow {
+      label: "Cover art in background"; hint: "Faded cover art behind the media player card";
+      optionKey: "mediaCoverBackground"; legacyKey: "iWantMediaCoverInBackground"; fallback: "control center";
+      scopeValues: ["controlCenter", "lockscreen", "both", "none"]
+    }
+    ScopeRow {
+      label: "Marquee text"; hint: "Scroll long track titles and artist names instead of eliding";
+      optionKey: "mediaMarqueeText"; legacyKey: "marqueeMediaText"; fallback: "none";
+    }
+    LockToggleRow { label: "Seek bar (lockscreen)"; hint: "Draggable progress bar in the lockscreen's media card"; optionKey: "mediaSeekBar" }
+    LockToggleRow { label: "Time labels (lockscreen)"; hint: "Elapsed / total time in the lockscreen's media card"; optionKey: "mediaTimes" }
+    LockToggleRow { label: "Transport controls (lockscreen)"; hint: "Previous / play-pause / next in the lockscreen's media card"; optionKey: "mediaTransport" }
 }
