@@ -15,7 +15,11 @@ Item {
   Process { id: brightnessSetProc; running: false }
 
   // media player
-  MediaPlayer {}
+  MediaPlayer {
+    active: box.controlCenter
+    visualizerValues: shellRoot.visualizerValues
+    cavaAvailable: shellRoot.cavaAvailable
+  }
 
   // control center buttons
   CcButtons {

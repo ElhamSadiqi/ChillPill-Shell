@@ -231,9 +231,13 @@ LOCK_WALLPAPER=~/Pictures/wall.png chillpill-lock  # lock with a specific wallpa
 No separate lock config, it reads `~/.config/chillpill-shell/config.jsonc` and the palette through `Theme.qml`,
 so these existing options apply: `displayPicture`, `textFontFamily`, `nerdFontFamily`, `dpiScale`, `showShadows` etc.
 
-`lockscreenPowerActions` (default `true`, toggle in the config app under **System → Lockscreen power buttons**) shows
+`lockscreenPowerActions` (default `true`, toggle in the config app under **System -> Lockscreen power buttons**) shows
 the suspend / restart / shutdown buttons on the card. Turn it off on shared machines so nobody at the lock screen can
 shut the box down with your work still unsaved.
+
+`lockscreenMedia` (default `true`, **System -> Lockscreen media player**) drops the regular media player card into the
+clock box under the greeting - the control center uses, with cover art, seekable
+progress bar and working prev / play-pause / next.
 
 The wallpaper is `$LOCK_WALLPAPER`, else `~/.cache/chillpill-shell/last_wallpaper`.
 

@@ -20,6 +20,21 @@ Rectangle {
     Behavior on height { NumberAnimation { duration: 320; easing.type: Easing.OutQuint } }
 
     property int margin: 16
+    // only poll while the surface that shows us is up (the shell sets this)
+    property bool active: true
+    // handy for hosts (the lockscreen) that want to react to the card appearing
+    readonly property bool hasPlayer: mprisModule.hasPlayer
+    // audio visualiser feed; the shell owns the cava pipe and pushes the values
+    // in. Left alone (empty/not available) the visualiser simply stays hidden,
+    // which is what the lockscreen wants.
+    property var visualizerValues: []
+    property bool cavaAvailable: false
+
+    // MPRIS is a bus client, so having our own instance here is harmless and
+    // makes this file usable from the lockscreen too (its own qs process)
+    MprisModule {
+        id: mprisModule
+    }
 
     // artist name adjustments
     property int artistFontSize: 10
@@ -222,7 +237,7 @@ Rectangle {
     Timer {
         id: progressPoller
         interval: 1000
-        running: box.controlCenter && mprisModule.hasPlayer
+        running: mediaCard.active && mprisModule.hasPlayer
         repeat: true
         triggeredOnStart: true
         onTriggered: {
@@ -268,8 +283,11 @@ Rectangle {
 
         Column {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 15
+            // driven by `margin` so the same card can be inset tighter where it
+            // is narrower (the lockscreen clock box). default 16 keeps the
+            // control center looking exactly as before
+            anchors.margins: mediaCard.margin
+            spacing: Math.max(8, mediaCard.margin - 1)
 
             // top row -> art + info + controls
             Row {
@@ -289,7 +307,7 @@ Rectangle {
                     CrossfadeImage {
                         anchors.fill: parent
                         source: mprisModule.artUrl
-                        sourceSize: Qt.size(94 * box.dpi, 94 * box.dpi)
+                        sourceSize: Qt.size(94 * Config.dpiScale, 94 * Config.dpiScale)
                         fadeDuration: 380
                     }
 
@@ -557,7 +575,9 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 10
-        values: shellRoot.visualizerValues ? shellRoot.visualizerValues.slice(1, barCount) : []
-        visible: Config.showAudioVisuals && shellRoot.cavaAvailable && mprisModule.hasPlayer
+        values: mediaCard.visualizerValues && mediaCard.visualizerValues.length > 1
+            ? mediaCard.visualizerValues.slice(1, barCount)
+            : []
+        visible: Config.showAudioVisuals && mediaCard.cavaAvailable && mprisModule.hasPlayer
     }
 }

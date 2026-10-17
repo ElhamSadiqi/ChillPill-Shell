@@ -7,6 +7,7 @@ Page {
     TextRow { label: "Default terminal"; hint: "To open Console-Only apps in the Terminal"; fieldWidth: 200; value: ConfigStore.get("defaultTerminal", ""); onEdited: (v) => ConfigStore.set("defaultTerminal", v) }
     TextRow { label: "Screen lock command"; fieldWidth: 200; value: ConfigStore.get("screenLockAppCommand", ""); onEdited: (v) => ConfigStore.set("screenLockAppCommand", v) }
     ToggleRow { label: "Lockscreen power buttons"; hint: "Show suspend / restart / shutdown on the lockscreen card (hide them on shared machines)"; value: ConfigStore.get("lockscreenPowerActions", true); onEdited: (v) => ConfigStore.set("lockscreenPowerActions", v) }
+    ToggleRow { label: "Lockscreen media player"; hint: "Show the now-playing strip on the lockscreen card (only when something plays)"; value: ConfigStore.get("lockscreenMedia", true); onEdited: (v) => ConfigStore.set("lockscreenMedia", v) }
     ToggleRow { label: "Confirm power actions"; hint: "Confirm the power action prompt (Shutdown, Restart, Logout)"; value: ConfigStore.get("confirmPowerActions", true); onEdited: (v) => ConfigStore.set("confirmPowerActions", v) }
     Heading { text: "CLIPBOARD" }
     ToggleRow { label: "Auto delete cliphist image cache"; hint: "Delete the cache image also as you delete the clipboard image"; value: ConfigStore.get("deleteCliphistImgCache", true); onEdited: (v) => ConfigStore.set("deleteCliphistImgCache", v) }

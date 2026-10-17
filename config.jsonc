@@ -37,6 +37,7 @@
   "showShadows": true,
   "confirmPowerActions": true,
   "lockscreenPowerActions": true,
+  "lockscreenMedia": true,
   "maxVolume": 100,
   "separatePreviewTabTypes": true,
   "appLauncherFuzzySearch": false,

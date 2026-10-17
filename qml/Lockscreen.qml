@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 // Lives next to shell.qml so it picks up Config.qml / Theme.qml directly.
 // Config:   ~/.config/chillpill-shell/config.jsonc via Config.qml (displayPicture, clockFormat,
 //           textFontFamily, nerdFontFamily, pillModules, dpiScale, showShadows, confirmPowerActions,
-//           lockscreenPowerActions, weatherLocation, weatherUnits, weatherRefreshInterval)
+//           lockscreenPowerActions, lockscreenMedia, weatherLocation, weatherUnits, weatherRefreshInterval)
 // As your lock command (screenLockAppCommand): env LOCK_NOW=1 qs -p /path/to/lockscreen.qml
 // Wallpaper: $LOCK_WALLPAPER when set, else the path stored in
 //           ~/.cache/chillpill-shell/last_wallpaper
@@ -43,6 +43,10 @@ Scope {
     readonly property real dpiScale: Config.dpiScale
     readonly property bool confirmPower: Config.confirmPowerActions
     readonly property bool showBattery: Config.pillModules.indexOf("battery") !== -1
+
+    // mirrored from the media card so the type scale can react to it
+    property bool mediaActive: false
+    readonly property bool mediaShown: Config.lockscreenMedia && mediaActive
 
     // weather (same endpoint + glyphs as qml/WeatherModule.qml)
     readonly property string wLocation: Config.weatherLocation
@@ -738,7 +742,7 @@ Scope {
                                 Row {
                                     id: panels
                                     width: parent.width
-                                    height: 320
+                                    height: 304
                                     spacing: 16
 
                                     // ---- left: clock ----
@@ -746,6 +750,15 @@ Scope {
                                         id: leftP
                                         width: 360
                                         height: parent.height
+
+                                        // type scales with the box and the shell's dpi setting, so the
+                                        // clock/date/greeting stay in proportion on any resolution
+                                        // no media card -> give the clock block a bit more presence
+                                        readonly property real typeScale: root.mediaShown ? 1.0 : 1.18
+                                        readonly property real clockSize: Math.max(24, Math.min(72,
+                                            Math.round(Math.min(height * 0.105, width * 0.10) * Config.dpiScale * typeScale)))
+                                        readonly property real dateSize: Math.max(13, Math.round(clockSize * 0.56))
+                                        readonly property real greetingSize: Math.max(10, Math.round(clockSize * 0.375))
                                         radius: 20
                                         color: th.panel
                                         border.width: 1
@@ -756,36 +769,91 @@ Scope {
                                         Column {
                                             anchors.centerIn: parent
                                             width: parent.width - 48
-                                            spacing: 8
+                                            // one spacing drives every gap: clock -> date -> greeting -> media
+                                            spacing: 12
 
-                                            T {
+                                            Item {
                                                 width: parent.width
-                                                height: 110
-                                                horizontalAlignment: Text.AlignHCenter
-                                                verticalAlignment: Text.AlignVCenter
-                                                text: Qt.formatDateTime(clock.date, root.clockFmt)
-                                                font.pixelSize: 55
-                                                fontSizeMode: Text.Fit
-                                                minimumPixelSize: 30
+                                                height: clockText.implicitHeight - Math.round((clockText.implicitHeight - leftP.clockSize) / 2)
+
+                                                T {
+                                                    id: clockText
+                                                    anchors.bottom: parent.bottom
+                                                    width: parent.width
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                    text: Qt.formatDateTime(clock.date, root.clockFmt)
+                                                    font.pixelSize: mediaActive ? 32 : 40
+                                                    fontSizeMode: Text.Fit
+                                                    minimumPixelSize: 30
+                                                }
                                             }
 
-                                            T {
+                                            Item {
                                                 width: parent.width
-                                                horizontalAlignment: Text.AlignHCenter
-                                                text: Qt.formatDateTime(clock.date, "dddd, d MMMM")
-                                                font.pixelSize: 22
-                                                color: th.sub
+                                                height: dateText.implicitHeight - Math.round((dateText.implicitHeight - leftP.dateSize) / 2)
+
+                                                T {
+                                                    id: dateText
+                                                    anchors.bottom: parent.bottom
+                                                    width: parent.width
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                    text: Qt.formatDateTime(clock.date, "dddd, d MMMM")
+                                                    font.pixelSize: mediaActive ? 18 : 20
+                                                    color: th.sub
+                                                }
                                             }
 
-                                            Item { width: 1; height: 10 }
-
-                                            T {
+                                            Item {
                                                 width: parent.width
-                                                horizontalAlignment: Text.AlignHCenter
-                                                text: root.greeting()
-                                                font.pixelSize: 15
-                                                color: th.hi
-                                                elide: Text.ElideRight
+                                                height: greetingText.implicitHeight - Math.round((greetingText.implicitHeight - leftP.greetingSize) / 2)
+
+                                                T {
+                                                    id: greetingText
+                                                    anchors.bottom: parent.bottom
+                                                    // nudge the greeting down when it sits alone in the box
+                                                    anchors.bottomMargin: root.mediaShown ? 0 : -6
+                                                    width: parent.width
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                    text: root.greeting()
+                                                    font.pixelSize: mediaActive ? 12 : 14
+                                                    color: th.hi
+                                                    elide: Text.ElideRight
+                                                }
+                                            }
+
+                                            // the shell's own media player card, same file the control
+                                            // center uses. it collapses to 0 height when nothing plays.
+                                            Item {
+                                                id: mediaWrap
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                width: parent.width - 8
+                                                height: root.mediaShown ? mediaCard.height : 0
+                                                visible: height > 0
+
+                                                RectangularShadow {
+                                                    visible: Config.showShadows
+                                                    anchors.fill: mediaCard
+                                                    radius: mediaCard.radius
+                                                    blur: 28
+                                                    spread: 1.5
+                                                    offset: Qt.vector2d(0, 8)
+                                                    color: Qt.rgba(0, 0, 0, 0.60)
+                                                }
+
+                                                MediaPlayer {
+                                                    id: mediaCard
+                                                    width: parent.width
+                                                    radius: 18
+                                                    margin: 16
+                                                }
+
+                                                Connections {
+                                                    target: mediaCard
+                                                    function onHasPlayerChanged() {
+                                                        root.mediaActive = mediaCard.hasPlayer;
+                                                    }
+                                                    Component.onCompleted: root.mediaActive = mediaCard.hasPlayer;
+                                                }
                                             }
                                         }
                                     }
