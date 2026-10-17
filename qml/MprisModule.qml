@@ -47,22 +47,8 @@ Item {
             return
         }
 
-        let currentPos = Number(activePlayer.position) || 0
-        root.polledPosition = currentPos
-
-        let totalLen = Number(activePlayer.length) || 0
-        if (totalLen <= 0 && activePlayer.metadata && activePlayer.metadata["mpris:length"]) {
-            totalLen = Number(activePlayer.metadata["mpris:length"])
-        }
-
-        if (totalLen > 100000) {
-            totalLen = totalLen / 1000000
-        }
-
-        // Only update the length if it makes sense (longer than current position + 5 seconds)
-        if (totalLen > currentPos + 5) {
-            root.polledLength = totalLen
-        }
+        root.polledPosition = Number(activePlayer.position) || 0
+        root.polledLength = activePlayer.lengthSupported ? (Number(activePlayer.length) || 0) : 0
     }
 
     Timer {
