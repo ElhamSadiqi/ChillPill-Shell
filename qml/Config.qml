@@ -50,6 +50,8 @@ Singleton {
       property string customWallpaperScript: ""
       property bool pillOnHover: false
       property bool confirmPowerActions: true
+      // suspend/restart/shutdown buttons on the lockscreen card
+      property bool lockscreenPowerActions: true
       property int maxVolume: 100
       property bool separatePreviewTabTypes: true
       property bool appLauncherFuzzySearch: false
@@ -99,6 +101,7 @@ Singleton {
   readonly property alias customWallpaperScript: adapter.customWallpaperScript
   readonly property alias pillOnHover: adapter.pillOnHover
   readonly property alias confirmPowerActions: adapter.confirmPowerActions
+  readonly property alias lockscreenPowerActions: adapter.lockscreenPowerActions
   readonly property alias maxVolume: adapter.maxVolume
   readonly property alias separatePreviewTabTypes: adapter.separatePreviewTabTypes
   readonly property alias appLauncherFuzzySearch: adapter.appLauncherFuzzySearch

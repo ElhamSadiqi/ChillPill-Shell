@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 // Lives next to shell.qml so it picks up Config.qml / Theme.qml directly.
 // Config:   ~/.config/chillpill-shell/config.jsonc via Config.qml (displayPicture, clockFormat,
 //           textFontFamily, nerdFontFamily, pillModules, dpiScale, showShadows, confirmPowerActions,
-//           weatherLocation, weatherUnits, weatherRefreshInterval)
+//           lockscreenPowerActions, weatherLocation, weatherUnits, weatherRefreshInterval)
 // As your lock command (screenLockAppCommand): env LOCK_NOW=1 qs -p /path/to/lockscreen.qml
 // Wallpaper: $LOCK_WALLPAPER when set, else the path stored in
 //           ~/.cache/chillpill-shell/last_wallpaper
@@ -1034,6 +1034,8 @@ Scope {
                                         anchors.rightMargin: 8
                                         anchors.verticalCenter: parent.verticalCenter
                                         spacing: 10
+                                        // shared machines: nobody should be able to shut the box down from the lock
+                                        visible: Config.lockscreenPowerActions
 
                                         PowerPill { glyph: "\uf186"; accent: "#9d6fff"; cmd: ["systemctl", "suspend"] }
                                         PowerPill { glyph: "\uf021"; accent: "#ff6b35"; cmd: ["systemctl", "reboot"] }

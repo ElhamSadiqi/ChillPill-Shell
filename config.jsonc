@@ -36,6 +36,7 @@
   "showSensitiveInfo": true,
   "showShadows": true,
   "confirmPowerActions": true,
+  "lockscreenPowerActions": true,
   "maxVolume": 100,
   "separatePreviewTabTypes": true,
   "appLauncherFuzzySearch": false,
