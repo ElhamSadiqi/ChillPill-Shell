@@ -17,7 +17,7 @@ Singleton {
     property string bg9: "#505050"
 
     property string bgD: "#0b0b0b"
-    property string bgD1: "#121212"
+    property string bgD1: "#101010"
 
     // more darker (ascending)
     property string fg: "#dadada"

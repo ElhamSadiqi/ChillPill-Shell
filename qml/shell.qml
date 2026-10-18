@@ -298,6 +298,10 @@ ShellRoot {
       property bool powerMenu: false
       property string powerMenuInitialAction: ""
 
+      // the state is unloaded on close, so it never gets to emit previewToggled(false)
+      // on its way out; reset here or the pill keeps the full preview shape
+      onCliphistOpenChanged: if (!cliphistOpen) cliphistPreviewing = false
+
       property var battery: UPower.displayDevice
       property bool hasBattery: battery.isLaptopBattery && battery.isPresent
       property bool charging: hasBattery && battery.state === UPowerDeviceState.Charging
@@ -367,7 +371,7 @@ ShellRoot {
                      : (notificationModule.active && !notifFullscreenMode) ? 320
                      : powerMenu ? 350
                      : controlCenter ? 390
-                     : spotlight ? 350
+                     : spotlight ? 328
                      : miniDashboard ? 420
                      : (cliphistOpen && cliphistPreviewing) ? 400
                      : wallpaperSwitcherOpen ? 600
@@ -664,7 +668,7 @@ ShellRoot {
       // spotlight (formerly app launcher) opens through IPC
       Item {
           anchors.centerIn: parent
-          width: box.implicitWidth - 16
+          width: box.implicitWidth - 14
           // height follows spotlight (shrinks with results)
           height: spotlightLoader.item ? spotlightLoader.item.height : 388
           opacity: box.spotlight

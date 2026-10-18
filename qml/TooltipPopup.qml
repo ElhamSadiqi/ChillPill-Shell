@@ -134,7 +134,7 @@ PanelWindow {
   Rectangle {
     anchors.fill: parent
     radius: 8 * effectiveScale
-    color: Theme.bg1
+    color: Theme.bg2
     opacity: box.tooltipVisible ? 1 : 0
     Behavior on opacity { NumberAnimation { duration: 100 } }
 
