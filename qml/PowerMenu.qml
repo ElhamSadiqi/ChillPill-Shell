@@ -15,11 +15,11 @@ Item {
   signal closeRequested()
 
   readonly property var actions: [
-    { id: "lock",     label: "Lock",     icon: "", accent: "#628ae2" },
-    { id: "sleep",    label: "Sleep",    icon: "󰤄", accent: "#9d6fff" },
-    { id: "logout",   label: "Logout",   icon: "󰍃", accent: "#f4a232" },
-    { id: "reboot",   label: "Restart",  icon: "", accent: "#ff6b35" },
-    { id: "shutdown", label: "Shutdown", icon: "", accent: "#d62828" }
+    { id: "lock",     label: "Lock",     icon: "", accent: Theme.powerLock },
+    { id: "sleep",    label: "Sleep",    icon: "󰤄", accent: Theme.powerSleep },
+    { id: "logout",   label: "Logout",   icon: "󰍃", accent: Theme.powerLogout },
+    { id: "reboot",   label: "Restart",  icon: "", accent: Theme.powerRestart },
+    { id: "shutdown", label: "Shutdown", icon: "", accent: Theme.powerShutdown }
   ]
 
   // every action gets the same slot width (widest label), otherwise the visual
@@ -263,7 +263,7 @@ Item {
 
       Text {
         text: root.pendingAction === "shutdown" ? "\udb81\udc25" : (root.pendingAction === "reboot" ? "\uead2" : "󰍃")
-        color: root.pendingAction === "shutdown" ? "#e22323" : (root.pendingAction === "reboot" ? "#ff6b35" : "#ea9d34")
+        color: root.pendingAction === "shutdown" ? Theme.danger : (root.pendingAction === "reboot" ? Theme.powerRestart : Theme.powerLogoutPending)
         font { family: Theme.nerdFontFamily; pixelSize: 14 }
       }
 
@@ -341,7 +341,7 @@ Item {
         width: 78
         height: 27
         radius: 8
-        color: root.pendingAction === "shutdown" ? "#e22323" : (root.pendingAction === "reboot" ? "#ff6c25" : "#e07e20")
+        color: root.pendingAction === "shutdown" ? Theme.danger : (root.pendingAction === "reboot" ? Theme.powerRestartConfirm : Theme.powerLogoutConfirm)
         opacity: (root.confirmIndex === 1 || root.hoveredButton === 1) ? 1.0 : 0.85
         scale: confirmMouse.pressed ? 0.94 : ((root.confirmIndex === 1 || root.hoveredButton === 1) ? 1.03 : 1.0)
         Behavior on scale { NumberAnimation { duration: 80 } }
@@ -352,7 +352,7 @@ Item {
           spacing: 4
           Text {
             text: "\uf00c" // nf-md-check
-            color: "white"
+            color: Theme.white
             Layout.alignment: Qt.AlignVCenter
             Layout.topMargin: 1
             font { family: Theme.nerdFontFamily; pixelSize: 11 }
@@ -361,7 +361,7 @@ Item {
             text: root.pendingAction === "shutdown" ? "Shutdown"
                 : (root.pendingAction === "reboot" ? "Restart"
                 : "Logout")
-            color: "white"
+            color: Theme.white
             font { family: Theme.fontFamily; pixelSize: 9; weight: 600 }
           }
         }

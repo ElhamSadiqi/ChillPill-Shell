@@ -8,7 +8,7 @@ Column {
   // exposed properties
   property real sliderHeight: 4
   property real sliderRadius: 4
-  property string sliderColor: "gray"
+  property string sliderColor: Theme.sliderBg
   property real sliderHitSlop: 8
 
   property string volIcon: ""
@@ -32,7 +32,7 @@ Column {
     Text {
       id: volIconText
       text: volIcon
-      color: volMuted ? "#fd2222" : Theme.fg
+      color: volMuted ? Theme.mutedFgSlider : Theme.fg
       font.family: Theme.nerdFontFamily
       font.pixelSize: 13
       Layout.preferredWidth: 16

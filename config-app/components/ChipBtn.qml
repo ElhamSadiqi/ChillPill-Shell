@@ -15,7 +15,7 @@ Rectangle {
     antialiasing: true
     opacity: cb.dim ? 0.45 : 1
 
-    color: cma.containsMouse ? (cb.danger ? Theme.dangerBg2 : Theme.bg7) : "transparent"
+    color: cma.containsMouse ? (cb.danger ? Theme.dangerBg2 : Theme.bg7) : Theme.transparent
     Behavior on color { ColorAnimation { duration: Theme.durFast } }
     Behavior on opacity { NumberAnimation { duration: Theme.durFast } }
 

@@ -232,7 +232,7 @@ Rectangle {
           ClippingRectangle {
             anchors.fill: parent
             radius: 10
-            color: "transparent"
+            color: Theme.transparent
 
             Image {
               anchors.fill: parent
@@ -249,7 +249,7 @@ Rectangle {
 
             Rectangle {
               anchors.fill: parent
-              color: mouseArea.containsMouse ? "white" : "transparent"
+              color: mouseArea.containsMouse ? Theme.white : Theme.transparent
               opacity: mouseArea.containsMouse ? 0.06 : 0
               Behavior on opacity { NumberAnimation { duration: 115 } }
             }
@@ -263,8 +263,8 @@ Rectangle {
               opacity: (mouseArea.containsMouse || cell.isCurrent) ? 1 : 0
               Behavior on opacity { NumberAnimation { duration: 250 } }
               gradient: Gradient {
-                GradientStop { position: 0.0; color: "#00000000" }
-                GradientStop { position: 1.0; color: "#cc000000" }
+                GradientStop { position: 0.0; color: Theme.transparent }
+                GradientStop { position: 1.0; color: Theme.fadeBottom }
               }
 
               Text {
@@ -273,7 +273,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.margins: 8
                 text: fileName.replace(/\.[^.]+$/, "")
-                color: "white"
+                color: Theme.white
                 elide: Text.ElideMiddle
                 font { family: Theme.fontFamily; pixelSize: 9 }
               }

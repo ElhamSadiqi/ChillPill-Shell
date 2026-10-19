@@ -9,7 +9,7 @@ SRow {
         width: 40; height: 22; radius: 15
         color: t.value ? Theme.accent : (tMa.containsMouse ? Theme.bg8 : Theme.bg5)
         border.width: 1
-        border.color: t.value ? "transparent" : Theme.borderBg2
+        border.color: t.value ? Theme.transparent : Theme.borderBg2
         Behavior on color { ColorAnimation { duration: 100 } }
         Behavior on border.color { ColorAnimation { duration: 100 } }
         Rectangle {

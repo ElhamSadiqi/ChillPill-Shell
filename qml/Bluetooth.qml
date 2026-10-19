@@ -7,8 +7,8 @@ RowLayout {
     id: root
     spacing: 4 * Config.paddingScale
 
-    property string iconFg: "#6791dc"
-    property string disconIconFg: "#9ea9bd"
+    property string iconFg: Theme.netFg
+    property string disconIconFg: Theme.netFgOff
 
     readonly property bool btEnabled: BluetoothController.enabled
     property bool connected: false

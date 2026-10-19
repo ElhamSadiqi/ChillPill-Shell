@@ -43,7 +43,7 @@ RowLayout {
   onMutedChanged: root.volumeChanged()
   onIntendedVolChanged: root.volumeChanged()
   property string fg: Theme.fg
-  property string mutedFg: "#fb2a2a"
+  property string mutedColor: Theme.mutedFg
   property var sink: Pipewire.defaultAudioSink
   readonly property bool ready: sink && sink.ready
   readonly property bool muted: ready && sink.audio.muted
@@ -100,7 +100,7 @@ RowLayout {
     color: {
       if (root.muted || vol === 0) {
         console.log("audio volume status:", root.muted)
-        return root.mutedFg
+        return root.mutedColor
       }
       return root.fg
     }

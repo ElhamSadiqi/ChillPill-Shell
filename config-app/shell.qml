@@ -232,7 +232,7 @@ ShellRoot {
                                     width: navCol.width
                                     height: 38; radius: 8
                                     antialiasing: true
-                                    color: win.current === nav.index ? Theme.bg5 : (nma.containsMouse ? Theme.bg2 : "transparent")
+                                    color: win.current === nav.index ? Theme.bg5 : (nma.containsMouse ? Theme.bg2 : Theme.transparent)
                                     Behavior on color { ColorAnimation { duration: 90 } }
                                     // dim pages the query misses
                                     opacity: win.search !== "" && win.matches(nav.index) === 0 ? 0.35 : 1

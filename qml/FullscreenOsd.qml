@@ -32,7 +32,7 @@ PanelWindow {
 
   WlrLayershell.layer: WlrLayershell.Overlay
   exclusiveZone: 0
-  color: "transparent"
+  color: Theme.transparent
   anchors { top: true; left: true; right: true }
   implicitHeight: cardBg.implicitHeight + 40
 

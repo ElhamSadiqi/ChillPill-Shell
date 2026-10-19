@@ -27,7 +27,7 @@ Rectangle {
         if (fb.danger) {
             if (fbMa.pressed) return Theme.dangerBg2
             if (fbMa.containsMouse) return Theme.dangerBg
-            return "transparent"
+            return Theme.transparent
         }
         if (fbMa.pressed) return Theme.bg5
         if (fbMa.containsMouse) return Theme.bg4

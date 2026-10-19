@@ -36,7 +36,7 @@ Item {
       height: avatarSize
       radius: avatarSize / 2
       property string imgPath: Config.displayPicture ? "file://" + Config.displayPicture.replace("~", Quickshell.env("HOME")) : ""
-      color: (imgPath === "" || avatarImg.status !== Image.Ready) ? Theme.bg5 : "transparent"
+      color: (imgPath === "" || avatarImg.status !== Image.Ready) ? Theme.bg5 : Theme.transparent
       layer.enabled: true
       layer.smooth: true
       layer.mipmap: true

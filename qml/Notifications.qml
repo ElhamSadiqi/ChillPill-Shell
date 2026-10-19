@@ -7,7 +7,7 @@ RowLayout {
   Text {
     text: "\uf0f3"
     font { family: Config.nerdFontFamily; pixelSize: 10 * box.dpi }
-    color: notificationModule.notifications.length > 0 ? "#d8ad5c" : "#9ea9bd"
+    color: notificationModule.notifications.length > 0 ? Theme.notifFg : Theme.netFgOff
   }
 
   Text {

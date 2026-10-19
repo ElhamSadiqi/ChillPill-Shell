@@ -120,9 +120,9 @@ Item {
         contentItem: Rectangle {
           implicitWidth: 8
           radius: 10
-          color: notifScrollBar.pressed ? "#888"
-               : scrollHover.hovered ? "#6f6f6f"
-               : "#3a3a3a"
+          color: notifScrollBar.pressed ? Theme.scrollPressed
+               : scrollHover.hovered ? Theme.scrollHover
+               : Theme.scrollIdle
           Behavior on color { ColorAnimation { duration: 100 } }
           HoverHandler { id: scrollHover }
         }
@@ -208,7 +208,7 @@ Item {
               Layout.preferredWidth: 22
               Layout.preferredHeight: 22
               radius: 99
-              color: dismissHover.containsMouse ? Theme.focusBgL : "transparent"
+              color: dismissHover.containsMouse ? Theme.focusBgL : Theme.transparent
               Behavior on color { ColorAnimation { duration: 100 } }
 
               Text {

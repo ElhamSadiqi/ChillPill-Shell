@@ -6,7 +6,7 @@ Item {
   implicitWidth: dateLabel.implicitWidth
   implicitHeight: dateLabel.implicitHeight
 
-  property string dateFg: "#9d9d9d"
+  property string dateFg: Theme.dateFg
   property int viewYear: new Date().getFullYear()
   property int viewMonth: new Date().getMonth()
 

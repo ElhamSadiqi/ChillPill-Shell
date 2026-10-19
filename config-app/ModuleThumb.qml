@@ -35,13 +35,13 @@ Rectangle {
     implicitWidth: rowOuter.implicitWidth + 4 * mt.ps + mt.padR
     implicitHeight: Math.round(17.5 * mt.ps)
     radius: 13
-    color: "transparent"
+    color: Theme.transparent
 
     Rectangle {
         visible: mt.removeState
         anchors.fill: parent
         radius: parent.radius
-        color: "#e2232326"
+        color: Theme.deleteScrim
     }
 
     RowLayout {
@@ -68,11 +68,11 @@ Rectangle {
                     required property int index
                     readonly property bool on: mt.activeSegment === seg.index
                     width: 17.5 * mt.ps; height: 17.5 * mt.ps; radius: 8 * mt.ps
-                    color: seg.on ? "#4d5258" : "#393c41"
+                    color: seg.on ? Theme.segActiveBg : Theme.segInactiveBg
                     Text {
                         anchors.centerIn: parent
                         text: seg.index + 1
-                        color: seg.on ? "#ffffff" : "#b3b9c2"
+                        color: seg.on ? Theme.white : Theme.segFgOff
                         font.family: Theme.fontFamily
                         font.pixelSize: 9 * mt.ps
                     }

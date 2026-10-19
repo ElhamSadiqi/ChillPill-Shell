@@ -210,7 +210,7 @@ Page {
                 anchors.rightMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
                 width: 22; height: 22; radius: 5
-                color: cm.containsMouse ? Theme.bg5 : "transparent"
+                color: cm.containsMouse ? Theme.bg5 : Theme.transparent
                 Text {
                     anchors.centerIn: parent
                     text: pg.copied ? "\uf00c" : "\uf0c5"
@@ -244,7 +244,7 @@ Page {
                 y: 9
                 Text {
                     text: pg.numbers
-                    color: "#555753"
+                    color: Theme.keycapFg
                     font.family: Theme.nerdFontFamily
                     font.pixelSize: 11
                     leftPadding: 12

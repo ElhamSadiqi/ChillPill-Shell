@@ -67,6 +67,38 @@ Singleton {
     readonly property string accentLo: "#7c7c7c"
     readonly property string coverArtGlowShadow: "#80aae6" // hardcored for now
 
+    // base literals
+    readonly property string white: "#ffffff"
+    readonly property string transparent: "#00000000"
+
+    // drag / drop overlays
+    readonly property string dragOverlay: "#1a9e9e9e"
+    readonly property string dragOverlayBorder: "#2e9e9e9e"
+    readonly property string dragOverlayFaint: "#0a9e9e9e"
+    readonly property string dragOverlayBorderFaint: "#1c9e9e9e"
+    readonly property string deleteOverlay: "#2be32626"
+    readonly property string deleteOverlayBorder: "#7ae32626"
+    readonly property string deleteOverlayFaint: "#1ce32626"
+    readonly property string deleteOverlayBorderFaint: "#4de32626"
+    readonly property string deleteScrim: "#e2232326"
+
+    // pill bar preview
+    readonly property string pillBg: "#090909"
+    readonly property string batteryFg: "#4bd25c"
+    readonly property string netFg: "#6791dc"
+    readonly property string btFg: "#6591e0"
+    readonly property string vpnFg: "#48cc47"
+    readonly property string notifFg: "#e2b052"
+    readonly property string weatherFg: "#d8ad5c"
+
+    // keycaps
+    readonly property string keycapFg: "#555753"
+
+    // module thumbnail segments
+    readonly property string segActiveBg: "#4d5258"
+    readonly property string segInactiveBg: "#393c41"
+    readonly property string segFgOff: "#b3b9c2"
+
     readonly property string dangerBg: "#3a1c1c"
     readonly property string dangerBg2: "#54211f"
 

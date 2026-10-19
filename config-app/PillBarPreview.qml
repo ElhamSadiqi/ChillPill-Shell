@@ -71,16 +71,16 @@ Item {
 
     function sample(name) {
         switch (name) {
-        case "battery":       return { icon: String.fromCodePoint(0xf0081), color: "#4bd25c", text: "98%" }
+        case "battery":       return { icon: String.fromCodePoint(0xf0081), color: Theme.batteryFg, text: "98%" }
         case "volume":        return { icon: String.fromCodePoint(0xf057e), color: Theme.fg,     text: "64%" }
         case "workspaces":    return { icon: "",       color: Theme.fg,     text: "", segments: true, n: Math.min(Math.max(ConfigStore.get("maxWorkspaces", 5), 1), 6) }
-        case "network":       return { icon: String.fromCodePoint(0xf0928), color: "#6791dc", text: "Home" }
+        case "network":       return { icon: String.fromCodePoint(0xf0928), color: Theme.netFg, text: "Home" }
         case "clock":         return { icon: "",       color: Theme.fg,     text: Qt.formatTime(new Date(), ConfigStore.get("clockFormat", "hh:mm")) }
         case "brightness":    return { icon: String.fromCodePoint(0xf00e0), color: Theme.fg,     text: "84%" }
-        case "vpn":           return { icon: String.fromCodePoint(0xf099d), color: "#48cc47", text: "on" }
-        case "notifications": return { icon: String.fromCodePoint(0xf0f3),  color: "#e2b052", text: "7" }
-        case "bluetooth":     return { icon: String.fromCodePoint(0xf00af), color: "#6591e0", text: "on", iconSize: 13 }
-        case "weather":       return { icon: String.fromCodePoint(0xe312),  color: "#d8ad5c", text: "24°C", iconSize: 11 }
+        case "vpn":           return { icon: String.fromCodePoint(0xf099d), color: Theme.vpnFg, text: "on" }
+        case "notifications": return { icon: String.fromCodePoint(0xf0f3),  color: Theme.notifFg, text: "7" }
+        case "bluetooth":     return { icon: String.fromCodePoint(0xf00af), color: Theme.btFg, text: "on", iconSize: 13 }
+        case "weather":       return { icon: String.fromCodePoint(0xe312),  color: Theme.weatherFg, text: "24°C", iconSize: 11 }
         case "audioVisualizer": return { icon: "",       spectrum: true, color: Theme.fg,     text: "" }
         default:              return { icon: String.fromCodePoint(0xf016),  color: Theme.fg4,    text: name }
         }
@@ -117,7 +117,7 @@ Item {
         width: Math.max(140, bar.groupWidth() + 62 * bar.ps)
         height: bar.barH
         radius: 20 * bar.ps
-        color: "#090909"
+        color: Theme.pillBg
         clip: true
         anchors.centerIn: parent
 
@@ -138,7 +138,7 @@ Item {
                             return bar.thumbProps(bar.grabbedEntry)
                         var e = bar.disp[thumb.index]
                         if (e === undefined)
-                            return { icon: "", text: "", color: "#00000000", segN: 0, flagColor: "#00000000" }
+                            return { icon: "", text: "", color: Theme.transparent, segN: 0, flagColor: Theme.transparent }
                         return bar.thumbProps(e)
                     }
 

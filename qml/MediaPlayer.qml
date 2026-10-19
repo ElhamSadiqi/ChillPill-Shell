@@ -161,7 +161,7 @@ Rectangle {
         property string altGlyph: ""
         property bool showAlt: false
         property color idleColor: Theme.fg3
-        property color hoverColor: "white"
+        property color hoverColor: Theme.white
         property real glyphSize: 23
         property real nudge: 0
         property bool primary: false
@@ -277,7 +277,7 @@ Rectangle {
             anchors.fill: parent
             anchors.margins: mediaCard.border.width
             radius: mediaCard.radius - mediaCard.border.width
-            color: "transparent"
+            color: Theme.transparent
 
             CrossfadeImage {
                 anchors.fill: parent
@@ -291,7 +291,7 @@ Rectangle {
                 anchors.fill: parent
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.0; color: Theme.transparent }
                     GradientStop { position: 0.8; color: Theme.bgD }
                 }
             }
@@ -319,7 +319,7 @@ Rectangle {
                     id: artBox
                     width: 47; height: 47
                     radius: 7
-                    color: "transparent"
+                    color: Theme.transparent
                     anchors.verticalCenter: parent.verticalCenter
                     clip: true
 

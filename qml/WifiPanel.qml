@@ -29,7 +29,7 @@ PanelWindow {
   exclusionMode: ExclusionMode.Ignore
   implicitWidth: 270 * dpi
   implicitHeight: 348 * dpi
-  color: "transparent"
+  color: Theme.transparent
 
   property var tetherDevice: Networking.devices.values.find(d => d.type === DeviceType.Wired && d.connected)
   readonly property bool tethered: tetherDevice !== undefined
@@ -62,7 +62,7 @@ PanelWindow {
         Layout.fillWidth: true
         height: 42 * dpi
         radius: 15 * dpi
-        color: wifiListWindow.tethered ? "#4173c4" : Theme.bg2
+        color: wifiListWindow.tethered ? Theme.netConnected : Theme.bg2
         border.color: wifiListWindow.tethered ? "" : Theme.borderBg2
         border.width: wifiListWindow.tethered ? 0 : 1
 
@@ -76,7 +76,7 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             text: String.fromCodePoint(0xf287) // nf-fa-usb
             font { family: Theme.nerdFontFamily; pixelSize: 12 * dpi }
-            color: wifiListWindow.tethered ? "white" : Theme.fg4
+            color: wifiListWindow.tethered ? Theme.white : Theme.fg4
           }
 
           Column {
@@ -84,12 +84,12 @@ PanelWindow {
             spacing: 2 * dpi
             Text {
               text: "USB Tethering"
-              color: wifiListWindow.tethered ? "white" : Theme.fg1
+              color: wifiListWindow.tethered ? Theme.white : Theme.fg1
               font { family: Theme.fontFamily; pixelSize: 11 * dpi; weight: wifiListWindow.tethered ? 500 : 300 }
             }
             Text {
               text: wifiListWindow.tethered ? (wifiListWindow.tetherDevice.name || "Connected") : "Not connected"
-              color: wifiListWindow.tethered ? "#c8d7ef" : Theme.fg4
+              color: wifiListWindow.tethered ? Theme.netConnectedFg : Theme.fg4
               elide: Text.ElideRight
               font { family: Theme.fontFamily; pixelSize: 9 * dpi }
             }
@@ -133,7 +133,7 @@ PanelWindow {
               width: networkColumn.width
               height: 45 * dpi
               radius: 16 * dpi
-              color: connected ? "#4173c4" : (networkMouse.containsMouse ? Theme.focusBgL : Theme.bg2)
+              color: connected ? Theme.netConnected : (networkMouse.containsMouse ? Theme.focusBgL : Theme.bg2)
               border.color: connected ? "" : Theme.borderBg2
               border.width: connected ? 0 : 1
 
@@ -174,12 +174,12 @@ PanelWindow {
                   spacing: 2 * dpi
                   Text {
                     text: displayName || ssid
-                    color: "white"
+                    color: Theme.white
                     font { family: Theme.fontFamily; pixelSize: 11 * dpi; weight: connected ? 500 : 300 }
                   }
                   Text {
                     text: connected ? "Connected" : (signal >= 0 ? signal + "%" : "")
-                    color: connected ? "#c8d7ef" : Theme.fg4
+                    color: connected ? Theme.netConnectedFg : Theme.fg4
                     elide: Text.ElideRight
                     font { family: Theme.fontFamily; pixelSize: 9 * dpi }
                   }
@@ -193,7 +193,7 @@ PanelWindow {
       Text {
         visible: WifiController.errorMessage.length > 0
         text: WifiController.errorMessage
-        color: "#e94545"
+        color: Theme.netFail
         font { family: Theme.fontFamily; pixelSize: 11 * dpi }
         wrapMode: Text.WordWrap
         Layout.fillWidth: true
@@ -250,9 +250,9 @@ PanelWindow {
           Rectangle {
             id: submitBtn
             width: 80 * dpi; height: 32 * dpi; radius: 9 * dpi
-            color: submitBtnMA.containsMouse ? "#3065be" : "#3874d7"
+            color: submitBtnMA.containsMouse ? Theme.netBtnHover : Theme.netBtn
             signal clicked()
-            Text { anchors.centerIn: parent; text: "Join"; color: "white"; font { family: Theme.fontFamily; pixelSize: 12 * dpi } }
+            Text { anchors.centerIn: parent; text: "Join"; color: Theme.white; font { family: Theme.fontFamily; pixelSize: 12 * dpi } }
             Behavior on color { ColorAnimation { duration: 80 } }
             MouseArea {
               id: submitBtnMA

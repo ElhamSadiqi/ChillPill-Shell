@@ -3,7 +3,7 @@ import QtQuick
 import QtQuick.Layouts
 RowLayout {
   id: root
-  property string fg: "#dadada"
+  property string fg: Theme.fg
   property int fontSize: 10 * Config.pillScale
   property var battery: box.battery
   property bool charging: box.charging
@@ -13,7 +13,7 @@ RowLayout {
   // icon: battery on laptops, plug on desktops
   Text {
     text: box.batteryIcon
-    color: hasBattery ? box.batteryIconColor : "#4bd25c"
+    color: hasBattery ? box.batteryIconColor : Theme.ok
 
     font {
       family: Theme.nerdFontFamily

@@ -17,13 +17,13 @@ RowLayout {
       required property int index
       property var ws: Hyprland.workspaces.values.find(w => w.id === index + 1)
       property bool isActive: Hyprland.focusedWorkspace?.id === (index + 1)
-      property string activeBg: "#4d5258"
-      property string inactiveBg: "#393c41"
+      property string activeBg: Theme.wsActiveBg
+      property string inactiveBg: Theme.wsInactiveBg
 
       Layout.preferredWidth: 17.5 * Config.pillScale
       Layout.preferredHeight: Layout.preferredWidth
       radius: 8 * Config.pillScale
-      color: isActive ? activeBg : (ws ? inactiveBg : "transparent")
+      color: isActive ? activeBg : (ws ? inactiveBg : Theme.transparent)
 
       // animate color transition on workspace switch
       Behavior on color { ColorAnimation { duration: 120 } }
@@ -31,7 +31,7 @@ RowLayout {
       Text {
         anchors.centerIn: parent
         text: wsButton.index + 1
-        color: wsButton.isActive ? "#ffffff" : "#dae0ea"
+        color: wsButton.isActive ? Theme.white : Theme.wsActiveFg
         font {
           family: Theme.fontFamily
           pixelSize: 9 * Config.pillScale

@@ -1065,7 +1065,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: "Deleted"
-                            color: "white"
+                            color: Theme.white
                             font { family: Theme.fontFamily; pixelSize: 14; weight: 600 }
                             opacity: currentDeleting ? 1 : 0
                             scale: currentDeleting ? 1 : 0.80
@@ -1096,7 +1096,7 @@ Item {
                                 id: copiedLabel
                                 anchors.centerIn: parent
                                 text: "Copied"
-                                color: "white"
+                                color: Theme.white
                                 font { family: Theme.fontFamily; pixelSize: 12; weight: 600 }
                             }
                         }
@@ -1150,7 +1150,7 @@ Item {
                 width: listView.width
                 height: root.isCollapsing(model.id) ? 5 : (model.imagePath ? 55 : 30)
                 radius: 7
-                color: root.isDeleting(model.id) ? Theme.deleting : (index === root.selectedIndex ? Theme.focusBg : (root.isMarked(model.id) ? Theme.bg4 : "transparent"))
+                color: root.isDeleting(model.id) ? Theme.deleting : (index === root.selectedIndex ? Theme.focusBg : (root.isMarked(model.id) ? Theme.bg4 : Theme.transparent))
                 clip: true
                 opacity: root.isCollapsing(model.id) ? 0 : 1
                 scale: root.isCollapsing(model.id) ? 0.75 : 1

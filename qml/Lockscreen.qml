@@ -57,24 +57,24 @@ Scope {
     property real wTemp: NaN
     property string wUnit: "°C"
     property string wGlyph: "\ue312"
-    property string wGlyphColor: "#9aa0a6"
+    property string wGlyphColor: Theme.weatherCloudy
     readonly property bool wOk: wLocation !== "" && !isNaN(wTemp)
 
     function wIconForCode(code) {
         const c = parseInt(code);
         if (c === 113)
-            return { glyph: "\ue30d", color: "#f4c542" };
+            return { glyph: "\ue30d", color: Theme.weatherClear };
         if ([116, 119, 122].indexOf(c) !== -1)
-            return { glyph: "\ue312", color: "#9aa0a6" };
+            return { glyph: "\ue312", color: Theme.weatherCloudy };
         if ([176, 263, 266, 293, 296, 299, 302, 305, 308, 311, 314, 317, 320, 353, 356, 359].indexOf(c) !== -1)
-            return { glyph: "\ue318", color: "#4a9de8" };
+            return { glyph: "\ue318", color: Theme.weatherRain };
         if ([200, 386, 389, 392, 395].indexOf(c) !== -1)
-            return { glyph: "\ue31d", color: "#e8b84a" };
+            return { glyph: "\ue31d", color: Theme.weatherThunder };
         if ([227, 230, 323, 326, 329, 332, 335, 338, 350, 368, 371, 374, 377].indexOf(c) !== -1)
-            return { glyph: "\ue31a", color: "#d8e8f4" };
+            return { glyph: "\ue31a", color: Theme.weatherSnow };
         if ([143, 248, 260].indexOf(c) !== -1)
-            return { glyph: "\ue313", color: "#8a8a8a" };
-        return { glyph: "\ue312", color: "#9aa0a6" };
+            return { glyph: "\ue313", color: Theme.weatherFog };
+        return { glyph: "\ue312", color: Theme.weatherCloudy };
     }
 
     function refreshWeather() {
@@ -172,7 +172,7 @@ Scope {
     }
 
     function batteryColor(pct) {
-        return pct > 30 ? "#4bd25c" : (pct <= 15 ? "#e22323" : "#eecc47");
+        return pct > 30 ? Theme.ok : (pct <= 15 ? Theme.danger : Theme.warnMed);
     }
 
     function onFailure() {
@@ -415,7 +415,7 @@ Scope {
 
         WlSessionLockSurface {
             id: lockSurface
-            color: "black"
+            color: Theme.black
 
 
             Item {
@@ -1106,9 +1106,9 @@ Scope {
                                         // shared machines: nobody should be able to shut the box down from the lock
                                         visible: Config.lockscreenPowerActions
 
-                                        PowerPill { glyph: "\uf186"; accent: "#9d6fff"; cmd: ["systemctl", "suspend"] }
-                                        PowerPill { glyph: "\uf021"; accent: "#ff6b35"; cmd: ["systemctl", "reboot"] }
-                                        PowerPill { glyph: "\uf011"; accent: "#d62828"; cmd: ["systemctl", "poweroff"] }
+                                        PowerPill { glyph: "\uf186"; accent: Theme.powerSleep; cmd: ["systemctl", "suspend"] }
+                                        PowerPill { glyph: "\uf021"; accent: Theme.powerRestart; cmd: ["systemctl", "reboot"] }
+                                        PowerPill { glyph: "\uf011"; accent: Theme.powerShutdown; cmd: ["systemctl", "poweroff"] }
                                     }
                                 }
                             }

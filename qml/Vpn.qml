@@ -6,8 +6,8 @@ import QtQuick.Layouts
 RowLayout {
   id: root
   spacing: 4 * Config.paddingScale
-  property string iconFg: "#48cc47"
-  property string disconIconFg: "#9ea9bd"
+  property string iconFg: Theme.vpnFg
+  property string disconIconFg: Theme.netFgOff
   property string vpnName: ""
   readonly property bool connected: vpnName.length > 0
   property string publicIp: ""

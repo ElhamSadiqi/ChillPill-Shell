@@ -93,7 +93,7 @@ SRow {
                         antialiasing: true
 
                         // weight stays constant so selecting never resizes a button
-                        color: btn.sel ? "transparent" : (bma.containsMouse ? Theme.bg4 : "transparent")
+                        color: btn.sel ? Theme.transparent : (bma.containsMouse ? Theme.bg4 : Theme.transparent)
                         Behavior on color { ColorAnimation { duration: 140 } }
 
                         scale: bma.pressed ? 0.95 : 1

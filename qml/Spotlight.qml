@@ -499,7 +499,7 @@ Item {
                 }
 
                 radius: 9
-                color: "transparent"
+                color: Theme.transparent
 
                 readonly property var iconSrc: Quickshell.iconPath(modelData.icon || "", true)
 
@@ -690,7 +690,7 @@ Item {
                 text: root.shellBusy ? "running.."
                     : (root.shellExit === 0 ? " exit 0" : "✕ exit " + root.shellExit)
                 color: root.shellBusy ? Theme.fg4
-                    : (root.shellExit === 0 ? "#46e03b" : Theme.deleting)
+                    : (root.shellExit === 0 ? Theme.okShell : Theme.deleting)
                 font { family: Theme.fontFamily; pixelSize: 9; weight: 500 }
                 horizontalAlignment: Text.AlignRight
             }

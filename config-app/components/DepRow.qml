@@ -51,7 +51,7 @@ RowLayout {
     Rectangle {
         visible: row.archPkg !== ""
         width: 20; height: 22; radius: 5
-        color: cma.containsMouse ? Theme.bg6 : "transparent"
+        color: cma.containsMouse ? Theme.bg6 : Theme.transparent
         Text {
             anchors.centerIn: parent
             text: "\uf0c5" // fa-copy

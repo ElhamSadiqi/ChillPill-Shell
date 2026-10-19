@@ -227,14 +227,14 @@ Rectangle {
         property string holidayName: calendarPopup.holidays[holidayKey] || ""
         property bool isHoliday: holidayName !== ""
 
-        color: isToday ? "#ec3737" : "transparent"
-        border.color: (!isToday && isHoliday) ? Theme.fg7 : "transparent"
+        color: isToday ? Theme.todayFg : Theme.transparent
+        border.color: (!isToday && isHoliday) ? Theme.fg7 : Theme.transparent
         border.width: 1
 
         Text {
           anchors.centerIn: parent
           text: index + 1
-          color: isToday ? Theme.bgD : (isHoliday ? "#ec3737" : Theme.fg)
+          color: isToday ? Theme.bgD : (isHoliday ? Theme.todayFg : Theme.fg)
           font { family: Theme.fontFamily; pixelSize: 9 * box.dpi; weight: (isToday || isHoliday) ? 700 : 300 }
         }
 
@@ -254,7 +254,7 @@ Rectangle {
     visible: opacity > 0
     opacity: calendarPopup.tooltipDay !== -1 ? 1 : 0
     Behavior on opacity { NumberAnimation { duration: 120 } }
-    color: "#1c1c1c"
+    color: Theme.calendarBg
     radius: 8 * box.dpi
     width: tipText.implicitWidth + 18 * box.dpi
     height: tipText.implicitHeight + 12 * box.dpi

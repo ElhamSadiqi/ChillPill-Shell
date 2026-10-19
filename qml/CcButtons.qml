@@ -51,7 +51,7 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: WifiController.enabled
-            ? (wifiHover.hovered ? Qt.lighter("#181d23", 1.2) : "#181d23")
+            ? (wifiHover.hovered ? Qt.lighter(Theme.ccActiveBg, 1.2) : Theme.ccActiveBg)
             : (wifiHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
     scale: wifiMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
@@ -61,7 +61,7 @@ RowLayout {
         anchors.centerIn: parent
         spacing: 5 * root.dpi
         icon: "\uf1eb"
-        iconColor: WifiController.enabled ? "#4888ef" : root.buttonFgOff
+        iconColor: WifiController.enabled ? Theme.ccActiveFg : root.buttonFgOff
         iconFontFamily: Theme.nerdFontFamily
         iconPixelSize: 12
 
@@ -112,7 +112,7 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: notificationModule.dndEnabled
-    ? (dndHover.hovered ? Qt.lighter("#262626", 1.2) : "#262626")
+    ? (dndHover.hovered ? Qt.lighter(Theme.ccDndBg, 1.2) : Theme.ccDndBg)
     : (dndHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
     scale: dndMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
@@ -120,7 +120,7 @@ RowLayout {
 
     Text {
       text: String.fromCodePoint(0xf1f6)
-      color: notificationModule.dndEnabled ? "#fff9eb" : root.buttonFgOff
+      color: notificationModule.dndEnabled ? Theme.ccDndFg : root.buttonFgOff
       anchors.centerIn: parent
       font { family: Theme.nerdFontFamily; pixelSize: 13 }
     }
@@ -140,7 +140,7 @@ RowLayout {
     implicitHeight: root.buttonHeight
     radius: root.buttonRadius
     color: countdownModule.running
-           ? (timerHover.hovered ? Qt.lighter("#20232a", 1.2) : "#20232a")
+           ? (timerHover.hovered ? Qt.lighter(Theme.ccActiveBg2, 1.2) : Theme.ccActiveBg2)
            : (timerHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
     scale: timerMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
@@ -148,7 +148,7 @@ RowLayout {
     property int selectedMinutes: 1
     property bool burstTriggered: false
     property bool bursting: false
-    readonly property var burstPalette: ["#ffd43b", "#ff6b6b", "#4490ee", "#b197fc", "#f783ac", "#63e6be"]
+    readonly property var burstPalette: Theme.burstPalette
 
     // hold to burst the running timer with a small explosion
     function burst() {
@@ -187,13 +187,13 @@ RowLayout {
           if (countdownModule.remainingSeconds > 0) return String.fromCodePoint(0xf1ae0)
           return String.fromCodePoint(0xf13ab)
         }
-        color: timerBtn.bursting ? "#ff922b" : (countdownModule.running ? "#4490ee" : root.buttonFgOff)
+        color: timerBtn.bursting ? Theme.burstFg : (countdownModule.running ? Theme.timerRunningFg : root.buttonFgOff)
         font { family: Theme.nerdFontFamily; pixelSize: 14 }
       }
       Text {
         text: countdownModule.running || countdownModule.remainingSeconds > 0
             ? countdownModule.formatted() : timerBtn.selectedMinutes + "m"
-        color: timerBtn.bursting ? "#ff922b" : (countdownModule.running ? Theme.fg : root.buttonFgOff)
+        color: timerBtn.bursting ? Theme.burstFg : (countdownModule.running ? Theme.fg : root.buttonFgOff)
         font { family: Theme.fontFamily; pixelSize: 10; weight: 400 }
       }
     }
@@ -203,7 +203,7 @@ RowLayout {
       id: burstFlash
       anchors.fill: parent
       radius: root.buttonRadius
-      color: "#ff922b"
+      color: Theme.burstFg
       visible: false
       opacity: 0
     }
@@ -306,7 +306,7 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: BluetoothController.enabled
-            ? (btHover.hovered ? Qt.lighter("#181d23", 1.2) : "#181d23")
+            ? (btHover.hovered ? Qt.lighter(Theme.ccActiveBg, 1.2) : Theme.ccActiveBg)
             : (btHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
     scale: btMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
@@ -316,7 +316,7 @@ RowLayout {
       spacing: 5 * root.dpi
       Text {
         text: "\uf294"
-        color: BluetoothController.enabled ? "#4888ef" : root.buttonFgOff
+        color: BluetoothController.enabled ? Theme.ccActiveFg : root.buttonFgOff
         font { family: Theme.nerdFontFamily; pixelSize: 15 }
       }
       MarqueeText {

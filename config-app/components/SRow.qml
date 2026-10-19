@@ -9,7 +9,7 @@ Rectangle {
     default property alias content: slot.data
     Layout.fillWidth: true
     implicitHeight: hint ? 62 : 52
-    color: "transparent"
+    color: Theme.transparent
 
     ColumnLayout {
         anchors.left: parent.left

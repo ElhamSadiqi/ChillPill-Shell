@@ -6,5 +6,5 @@ MultiEffect {
   shadowEnabled: true
   shadowBlur: 0.80
   shadowVerticalOffset: 8 * Config.dpiScale
-  shadowColor: "#7a000000"
+  shadowColor: Theme.shadowSoft
 }

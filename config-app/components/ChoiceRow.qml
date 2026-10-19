@@ -21,7 +21,7 @@ SRow {
                 antialiasing: true
 
                 border.width: 1
-                border.color: opt.sel ? "transparent" : (optMa.containsMouse ? Theme.borderBg1 : Theme.borderBg3)
+                border.color: opt.sel ? Theme.transparent : (optMa.containsMouse ? Theme.borderBg1 : Theme.borderBg3)
                 Behavior on border.color { ColorAnimation { duration: Theme.durFast } }
 
                 scale: optMa.pressed ? 0.96 : 1

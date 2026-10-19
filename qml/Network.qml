@@ -8,8 +8,8 @@ RowLayout {
 
   spacing: 4 * Config.paddingScale
 
-  property string iconFg: "#6791dc"
-  property string disconIconFg: "#9ea9bd"
+  property string iconFg: Theme.netFg
+  property string disconIconFg: Theme.netFgOff
 
   readonly property bool wifiEnabled: Networking.wifiEnabled
   property var wifiDevice: Networking.devices.values.find(d => d.type === DeviceType.Wifi)

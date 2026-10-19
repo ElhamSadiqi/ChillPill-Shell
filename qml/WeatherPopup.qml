@@ -93,14 +93,14 @@ Rectangle {
           text: WeatherModule.loading ? "..."
               : WeatherModule.isError ? "!"
               : Math.round(WeatherModule.temp) + WeatherModule.tempUnit
-          color: WeatherModule.isError ? Theme.warning : "#ecebeb"
+          color: WeatherModule.isError ? Theme.warning : Theme.weatherText
           font.family: WeatherModule.isError ? Config.nerdFontFamily : Theme.fontFamily
           font.pixelSize: 25 * box.dpi
           font.weight: 500
         }
         Text {
           text: WeatherModule.condition
-          color: "#7e7e7e"
+          color: Theme.weatherCondition
           font.family: Theme.fontFamily
           font.pixelSize: weatherPopup.fontSizeBody * box.dpi
           font.weight: 400
@@ -119,9 +119,9 @@ Rectangle {
 
       Repeater {
         model: [
-          { icon: "\ue34e", color: "#f18d41", value: Math.round(WeatherModule.feelsLike) + WeatherModule.tempUnit, label: "Feels" },
-          { icon: "\ue373", color: "#5f99fa", value: WeatherModule.humidity + "%", label: "Humidity" },
-          { icon: "\ue34b", color: "#54e04b", value: Math.round(WeatherModule.windSpeed) + " " + WeatherModule.speedUnit, label: "Wind" }
+          { icon: "\ue34e", color: Theme.weatherFeels, value: Math.round(WeatherModule.feelsLike) + WeatherModule.tempUnit, label: "Feels" },
+          { icon: "\ue373", color: Theme.weatherHumidity, value: WeatherModule.humidity + "%", label: "Humidity" },
+          { icon: "\ue34b", color: Theme.weatherWind, value: Math.round(WeatherModule.windSpeed) + " " + WeatherModule.speedUnit, label: "Wind" }
         ]
         delegate: Rectangle {
           Layout.fillWidth: true
@@ -182,7 +182,7 @@ Rectangle {
 
         Text {
           text: "\ue34c"
-          color: "#ffcd58"
+          color: Theme.weatherSunrise
           font.family: Config.nerdFontFamily
           font.pixelSize: weatherPopup.iconSizeMedium * box.dpi
           Layout.leftMargin: 10 * box.dpi
@@ -201,7 +201,7 @@ Rectangle {
       RowLayout {
         Text {
           text: "\ue34d"
-          color: "#ff904d"
+          color: Theme.weatherSunset
           font.family: Config.nerdFontFamily
           font.pixelSize: weatherPopup.iconSizeMedium * box.dpi
         }
@@ -231,7 +231,7 @@ Rectangle {
 
           Text {
             text: Qt.formatDate(new Date(modelData.date), "ddd")
-            color: "#6e6e6e"
+            color: Theme.weatherDay
             font.family: Theme.fontFamily
             font.pixelSize: weatherPopup.fontSizeTiny * box.dpi
             Layout.alignment: Qt.AlignHCenter
@@ -247,7 +247,7 @@ Rectangle {
 
           Text {
             text: Math.round(modelData.maxTemp) + "°/" + Math.round(modelData.minTemp) + "°"
-            color: "#a0a0a0"
+            color: Theme.weatherTemp
             font.family: Theme.fontFamily
             font.pixelSize: weatherPopup.fontSizeTiny * box.dpi
             Layout.alignment: Qt.AlignHCenter
@@ -260,7 +260,7 @@ Rectangle {
     // last time weather updated
     Text {
       text: "Updated at " + Qt.formatTime(WeatherModule.lastUpdated, "hh:mm")
-      color: "#8a8a8a"
+      color: Theme.fgMuted
       font.family: Theme.fontFamily
       font.pixelSize: weatherPopup.fontSizeTiny * box.dpi
       Layout.alignment: Qt.AlignHCenter

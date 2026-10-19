@@ -20,8 +20,8 @@ Item {
   // mirror of ModuleThumb.ps, passed in so this file stays self-contained
   property real ps: 1
 
-  readonly property color barColor: "#dadada"   // Theme.fg
-  readonly property color barSecondaryColor: "#777777"   // Theme.fg5
+  readonly property color barColor: Theme.fg
+  readonly property color barSecondaryColor: Theme.fg5
 
   // proportions track the real module so the preview reads true
   readonly property int bars: 9

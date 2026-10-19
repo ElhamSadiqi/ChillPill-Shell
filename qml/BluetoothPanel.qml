@@ -24,7 +24,7 @@ PanelWindow {
   exclusionMode: ExclusionMode.Ignore
   implicitWidth: 270 * dpi
   implicitHeight: 348 * dpi
-  color: "transparent"
+  color: Theme.transparent
 
   onVisibleChanged: {
     if (visible && BluetoothController.enabled) BluetoothController.refreshDevices(true)
@@ -96,7 +96,7 @@ PanelWindow {
               width: deviceColumn.width
               height: Math.max(45, contentRow.implicitHeight + 15)
               radius: 16 * dpi
-              color: connected ? "#4173c4" : (deviceMouse.containsMouse ? Theme.focusBgL : Theme.bg2)
+              color: connected ? Theme.netConnected : (deviceMouse.containsMouse ? Theme.focusBgL : Theme.bg2)
               border.color: connected ? "" : Theme.borderBg2
               border.width: connected ? 0 : 1
 
@@ -146,14 +146,14 @@ PanelWindow {
                   spacing: 2 * dpi
                   Text {
                     text: name
-                    color: "white"
+                    color: Theme.white
                     font { family: Theme.fontFamily; pixelSize: 11 * dpi; weight: connected ? 500 : 300 }
                   }
                   Text {
                     width: parent.width
                     text: (connected ? "Connected" : (paired ? "Paired \u2022 right-click to forget" : "Not paired"))
                       + (battery >= 0 ? " \u2022 " + battery + "%" : "")
-                    color: connected ? "#c8d7ef" : "#949494"
+                    color: connected ? Theme.netConnectedFg : Theme.btDeviceOff
                     wrapMode: Text.WordWrap
                     font { family: Theme.fontFamily; pixelSize: 9 * dpi }
                   }
@@ -167,7 +167,7 @@ PanelWindow {
       Text {
         visible: BluetoothController.errorMessage.length > 0
         text: BluetoothController.errorMessage
-        color: "#e94545"
+        color: Theme.netFail
         font { family: Theme.fontFamily; pixelSize: 11 * dpi }
         wrapMode: Text.WordWrap
         Layout.fillWidth: true
@@ -241,7 +241,7 @@ PanelWindow {
           width: parent.width
           horizontalAlignment: Text.AlignHCenter
           text: BluetoothPairingAgent.displayedCode
-          color: "white"
+          color: Theme.white
           font { family: Theme.fontFamily; pixelSize: 22 * dpi; bold: true; letterSpacing: 3 }
         }
 
@@ -251,7 +251,7 @@ PanelWindow {
           width: parent.width
           horizontalAlignment: Text.AlignHCenter
           text: BluetoothPairingAgent.displayedCode
-          color: "white"
+          color: Theme.white
           font { family: Theme.fontFamily; pixelSize: 22 * dpi; bold: true; letterSpacing: 3 }
         }
 
@@ -263,12 +263,12 @@ PanelWindow {
             id: pairSubmitBtn
             visible: BluetoothPairingAgent.requestRequiresInput || BluetoothPairingAgent.requestRequiresConfirmation
             width: 80 * dpi; height: 32 * dpi; radius: 9 * dpi
-            color: pairSubmitMA.containsMouse ? "#3065be" : "#3874d7"
+            color: pairSubmitMA.containsMouse ? Theme.netBtnHover : Theme.netBtn
             signal clicked()
             Text {
               anchors.centerIn: parent
               text: BluetoothPairingAgent.requestRequiresInput ? "Pair" : "Confirm"
-              color: "white"
+              color: Theme.white
               font { family: Theme.fontFamily; pixelSize: 12 * dpi}
             }
             Behavior on color { ColorAnimation { duration: 80 } }
@@ -292,8 +292,8 @@ PanelWindow {
           Rectangle {
             visible: !BluetoothPairingAgent.requestRequiresInput && !BluetoothPairingAgent.requestRequiresConfirmation
             width: 80 * dpi; height: 32 * dpi; radius: 9 * dpi
-            color: okMA.containsMouse ? "#3065be" : "#3874d7"
-            Text { anchors.centerIn: parent; text: "OK"; color: "white"; font { family: Theme.fontFamily; pixelSize: 12 * dpi } }
+            color: okMA.containsMouse ? Theme.netBtnHover : Theme.netBtn
+            Text { anchors.centerIn: parent; text: "OK"; color: Theme.white; font { family: Theme.fontFamily; pixelSize: 12 * dpi } }
             Behavior on color { ColorAnimation { duration: 80 } }
             MouseArea {
               id: okMA

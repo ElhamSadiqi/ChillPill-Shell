@@ -20,8 +20,8 @@ Item {
   property real minBarHeight: 3
   property real barRadius: 1.5
   property color barColor: Theme.accent
-  // when set (not "transparent"), odd bars get this color instead of barColor
-  property color barSecondaryColor: "transparent"
+  // when set (not Theme.transparent), odd bars get this color instead of barColor
+  property color barSecondaryColor: Theme.transparent
   // mirrored look: bars expand from the vertical center instead of the bottom
   property bool centered: false
   property real animationDuration: 70
@@ -54,7 +54,7 @@ Item {
           // in centered mode maxBarHeight is the full up+down extent of a bar
           height: barContainer.targetHeight
           radius: root.barRadius
-          color: root.barSecondaryColor !== "transparent" ? (index % 2 === 0 ? root.barColor : root.barSecondaryColor) : root.barColor
+          color: root.barSecondaryColor !== Theme.transparent ? (index % 2 === 0 ? root.barColor : root.barSecondaryColor) : root.barColor
 
           Behavior on height {
             NumberAnimation {

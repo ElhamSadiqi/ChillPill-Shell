@@ -135,7 +135,7 @@ ShellRoot {
     // reserve top space only while the pill is shown
     margins.top: box.revealed ? Config.pillTopMargin : 0
     exclusiveZone: box.revealed ? Config.pillBottomMargin : 0
-    color: "transparent"
+    color: Theme.transparent
 
     // Mask input to only the capsule
     mask: Region {
@@ -217,7 +217,7 @@ ShellRoot {
         width: pillShadow.visW
         height: pillShadow.height - pillShadow.pad * 2.2 - pillShadow.drop
         radius: box.radius * box.dpi
-        color: "#b0000000"
+        color: Theme.shadowPill
 
         layer.enabled: true
         layer.smooth: true
@@ -305,7 +305,7 @@ ShellRoot {
       property var battery: UPower.displayDevice
       property bool hasBattery: battery.isLaptopBattery && battery.isPresent
       property bool charging: hasBattery && battery.state === UPowerDeviceState.Charging
-      readonly property string batteryIconColor: box.charging || box.batteryLevel > 30 ? "#4bd25c" : box.batteryLevel <= 15 ? "#e22323" : "#eecc47"
+      readonly property string batteryIconColor: box.charging || box.batteryLevel > 30 ? Theme.ok : box.batteryLevel <= 15 ? Theme.danger : Theme.warnMed
       readonly property int batteryLevel: hasBattery ? Math.round(battery.percentage * 100) : 0
       // battery icon on laptops, plug icon on desktops
       readonly property string batteryIcon: {
@@ -545,10 +545,10 @@ ShellRoot {
       OsdBar {
           active: box.activeOsd === "volume"
           icon: box.volumeModule ? box.volumeModule.icon : ""
-          iconColor: box.volumeModule && box.volumeModule.muted ? box.volumeModule.mutedFg : Theme.fg
+          iconColor: box.volumeModule && box.volumeModule.muted ? box.volumeModule.mutedColor : Theme.fg
           percent: box.volumeModule ? Math.min(box.volumeModule.intendedVol / Config.maxVolume, 1.0) : 0
           muted: box.volumeModule ? box.volumeModule.muted : false
-          barWidth: box.volumeModule && box.volumeModule.mutedFg ? 80 : 90
+          barWidth: box.volumeModule && box.volumeModule.mutedColor ? 80 : 90
           valueText: box.volumeModule ? (box.volumeModule.muted ? "muted" : box.volumeModule.intendedVol + "%") : ""
       }
 
@@ -575,7 +575,7 @@ ShellRoot {
       OsdBar {
         active: box.activeOsd === "timer"
         icon: String.fromCodePoint(0xf1ad1)
-        iconColor: "#5892f3"
+        iconColor: Theme.timerFg
         valueText: "Timer finished"
         barWidth: 0
         spacing: 5
@@ -1045,7 +1045,7 @@ ShellRoot {
 
       Text {
         text: fsVolume.volModule ? fsVolume.volModule.icon : ""
-        color: fsVolume.volModule && fsVolume.volModule.muted ? fsVolume.volModule.mutedFg : Theme.fg
+        color: fsVolume.volModule && fsVolume.volModule.muted ? fsVolume.volModule.mutedColor : Theme.fg
         font { family: Theme.nerdFontFamily; pixelSize: 16 * box.dpi }
       }
 
@@ -1061,7 +1061,7 @@ ShellRoot {
           width: parent.width * (fsVolume.volModule ? Math.min(fsVolume.volModule.intendedVol / Config.maxVolume, 1.0) : 0)
           height: parent.height
           radius: parent.radius
-          color: fsVolume.volModule && fsVolume.volModule.muted ? fsVolume.volModule.mutedFg : Theme.fg
+          color: fsVolume.volModule && fsVolume.volModule.muted ? fsVolume.volModule.mutedColor : Theme.fg
           Behavior on width { NumberAnimation { duration: osdSpeed; easing.type: Easing.OutCubic } }
         }
       }

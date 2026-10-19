@@ -8,7 +8,7 @@ PanelWindow {
   visible: box.tooltipVisible
   exclusionMode: ExclusionMode.Ignore
   WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-  color: "transparent"
+  color: Theme.transparent
 
   readonly property real effectiveScale: Config.dpiScale * Config.pillScale
 

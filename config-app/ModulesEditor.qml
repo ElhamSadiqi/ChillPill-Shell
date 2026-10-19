@@ -78,8 +78,8 @@ ColumnLayout {
             z: 2
             visible: opacity > 0.01
             opacity: bar.dragActive ? 1 : 0
-            color: bar.removeTarget ? "#1ce32626" : "#0a9e9e9e"
-            border.color: bar.removeTarget ? "#4de32626" : "#1c9e9e9e"
+            color: bar.removeTarget ? Theme.deleteOverlayFaint : Theme.dragOverlayFaint
+            border.color: bar.removeTarget ? Theme.deleteOverlayBorderFaint : Theme.dragOverlayBorderFaint
             border.width: 1
             Behavior on opacity { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 130 } }
@@ -91,8 +91,8 @@ ColumnLayout {
                 width: dropRow.implicitWidth + 26
                 height: 28
                 radius: 14
-                color: bar.removeTarget ? "#2be32626" : "#1a9e9e9e"
-                border.color: bar.removeTarget ? "#7ae32626" : "#2e9e9e9e"
+                color: bar.removeTarget ? Theme.deleteOverlay : Theme.dragOverlay
+                border.color: bar.removeTarget ? Theme.deleteOverlayBorder : Theme.dragOverlayBorder
                 border.width: 1
                 scale: bar.removeTarget ? 1 : 0.92
                 Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
@@ -160,7 +160,7 @@ ColumnLayout {
         Layout.alignment: Qt.AlignLeft
         implicitWidth: customAddLbl.implicitWidth + 26
         height: 30; radius: 15
-        color: customAddMa.containsMouse ? Theme.accent : "transparent"
+        color: customAddMa.containsMouse ? Theme.accent : Theme.transparent
         border.color: Theme.accent
         Text {
             id: customAddLbl
