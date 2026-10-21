@@ -550,6 +550,7 @@ Scope {
                     source: root.wallpaper !== "" ? "file://" + encodeURI(root.wallpaper) : ""
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
+                    cache: false
                     sourceSize.width: 1920
                     scale: 1.10          // hides the dark edge the blur leaves behind
                     opacity: status === Image.Ready ? 1 : 0
@@ -612,16 +613,16 @@ Scope {
                     scale: (area.pressed ? 0.92 : (hovered && interactive ? 1.03 : 1))
 
                     Behavior on color {
-                        ColorAnimation { duration: 140 }
+                        ColorAnimation { duration: 100 }
                     }
                     Behavior on border.color {
-                        ColorAnimation { duration: 160 }
+                        ColorAnimation { duration: 100 }
                     }
                     Behavior on scale {
-                        NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 100 }
                     }
                     Behavior on width {
-                        NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 100 }
                     }
 
                     RowLayout {
@@ -649,6 +650,7 @@ Scope {
 
                     interactive: true
                     highlighted: armed
+                    scale: 1
 
                     onClicked: {
                         if (armed || !root.confirmPower) {
