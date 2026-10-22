@@ -107,7 +107,7 @@ ColumnLayout {
             TextRow {
                 id: formatRow
                 label: "Format"
-                hint: "Bar text — placeholders: {text} {tooltip} {icon}"
+                hint: "Bar text - placeholders: {text} {tooltip} {icon}"
                 fieldWidth: 240
                 placeholder: "{icon} {text}"
                 value: cf.draft.format
@@ -124,7 +124,7 @@ ColumnLayout {
             TextRow {
                 id: tooltipRow
                 label: "Tooltip"
-                hint: "Hover text — placeholders: {text} {tooltip} {icon}"
+                hint: "Hover text - placeholders: {text} {tooltip} {icon}"
                 fieldWidth: 240
                 value: cf.draft.tooltip
                 onEdited: (v) => cf.field("tooltip", v)
