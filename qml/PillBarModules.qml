@@ -68,8 +68,14 @@ Row {
           }
           switch (modelData) {
             case "volume":
+              // The Repeater rebuilds every module whenever Config.pillModules is
+              // reassigned (config-app rewrites the JSON). A fresh volume module
+              // emits volumeChanged while syncing its initial state, which is not
+              // a user action, so ignore signals during a short grace period.
               box.volumeModule = item
+              const volumeLoadedAt = Date.now()
               item.volumeChanged.connect(function() {
+                if (Date.now() - volumeLoadedAt < 1500) return
                 if (!box.controlCenter) box.activeOsd = "volume"
                 osdHideTimer.interval = Config.osdDuration
                 osdHideTimer.restart()
