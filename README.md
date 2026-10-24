@@ -398,6 +398,7 @@ Keybindings are highly recommended for ChillPill-Shell in your Hyprland config. 
 | `spotlight` | `MOD + D` | Apps list to open, web search, math and basic shell run |
 | `wallpaperSwitcher` | `MOD + W` | Wallpaper switcher |
 | `powerMenu` | `MOD + Escape` | Power menu actions |
+| `wifiState` | `MOD + CTRL + W` | Wi-Fi State |
 
 `MOD` is the `mainMod` variable (typically <kbd>SUPER</kbd> key) from your config, e.g. `hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc -p /usr/share/chillpill-shell call spotlight toggle"))`.
 On NixOS the command is `chillpill-shell-ipc call <state> toggle` instead of `qs ipc -p /usr/share/chillpill-shell`

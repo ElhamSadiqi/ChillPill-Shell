@@ -33,6 +33,7 @@ Item {
     hasPlayer: mprisModule.hasPlayer
     playerHeight: box.ccButtonHeight
     notificationPopup: notificationModule.active
+    onWifiPanelToggleRequested: box.wifiPanelOpen = !box.wifiPanelOpen
   }
 
   CcSliders {

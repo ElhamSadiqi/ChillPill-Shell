@@ -63,6 +63,13 @@ ShellRoot {
     function hide(): void { box.powerMenu = false; box.powerMenuInitialAction = "" }
   }
 
+  IpcHandler {
+    target: "wifiState"
+    function toggle(): void { box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.wifiPanelOpen = !box.wifiPanelOpen; box.controlCenter = box.wifiPanelOpen }
+    function show(): void { box.controlCenter = true; box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.wifiPanelOpen = true }
+    function hide(): void { box.powerMenu = false; box.wifiPanelOpen = false }
+  }
+
   function capitalize(str) {
       return str.charAt(0).toUpperCase() + str.slice(1)
   }
@@ -120,7 +127,7 @@ ShellRoot {
   PanelWindow {
     id: panelWindow
     WlrLayershell.layer: WlrLayershell.Top
-    WlrLayershell.keyboardFocus: (box.cliphistOpen || box.spotlight || box.wallpaperSwitcherOpen || box.powerMenu) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: (box.wifiPanelOpen || box.cliphistOpen || box.spotlight || box.wallpaperSwitcherOpen || box.powerMenu ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None)
     implicitHeight: Math.max(885 * scale, calendarLoader.item && calendarLoader.item.visible
             ? calendarLoader.y + calendarLoader.item.height : 0)
     onScreenChanged: console.log("dpi:", screen.devicePixelRatio)
@@ -292,6 +299,25 @@ ShellRoot {
       property bool hovered: false
       property bool miniDashboard: false
       property bool controlCenter: false
+      property bool wifiPanelOpen: false
+      // the panel is a Loader (see wifiPanelHost): built on first open, kept
+      // alive just long enough for the close fade to render
+      property bool wifiPanelLoaded: false
+      onWifiPanelOpenChanged: {
+        if (wifiPanelOpen) {
+          wifiPanelLoaded = true
+          wifiPanelUnloadTimer.stop()
+        } else {
+          wifiPanelUnloadTimer.restart()
+        }
+      }
+
+      Timer {
+        id: wifiPanelUnloadTimer
+        // the panel's own reveal-out is 460ms
+        interval: 520
+        onTriggered: box.wifiPanelLoaded = false
+      }
       property bool cliphistOpen: false
       property bool wallpaperSwitcherOpen: false
       property bool cliphistPreviewing: false
@@ -314,6 +340,10 @@ ShellRoot {
         const icons = [0xf0083, 0xf007a, 0xf007d, 0xf007c, 0xf007d, 0xf007e, 0xf007f, 0xf0082, 0xf0081, 0xf0079]
         const base = String.fromCodePoint(icons[Math.min(Math.floor(batteryLevel / 10), 9)])
         return charging ? base + String.fromCodePoint(0xf140b) : base
+      }
+
+      onControlCenterChanged: {
+        if (!controlCenter) wifiPanelOpen = false
       }
 
       onChargingChanged: {
@@ -364,13 +394,18 @@ ShellRoot {
       // adjust pill shape conditionally (pill state)
       readonly property real dpi: Config.dpiScale
 
+      // cc width, and the wider box the wifi panel takes over
+      readonly property real ccBaseWidth: 390
+      readonly property real wifiPanelBoxWidth: 340
+      readonly property real wifiPanelHeight: 350
+
       readonly property real baseWidth: activeOsd === "battery" ? osdWidth
                      : activeOsd === "timer" ? osdWidth
                      : activeOsd === "volume" ? osdWidth
                      : activeOsd === "brightness" ? osdWidth
                      : (notificationModule.active && !notifFullscreenMode) ? 320
                      : powerMenu ? 350
-                     : controlCenter ? 390
+                     : controlCenter ? (wifiPanelOpen ? wifiPanelBoxWidth : ccBaseWidth)
                      : spotlight ? 328
                      : miniDashboard ? 420
                      : (cliphistOpen && cliphistPreviewing) ? 400
@@ -385,10 +420,9 @@ ShellRoot {
                   : activeOsd === "brightness" ? osdHeight
                   : (notificationModule.active && !notifFullscreenMode) ? 52
                   : powerMenu ? 102
-                  : controlCenter && mprisModule.hasPlayer
-                      ? (240 + notifBump)
+                  : wifiPanelOpen ? wifiPanelHeight
                   : controlCenter
-                      ? (118 + notifBump)
+                      ? Math.max((mprisModule.hasPlayer ? 240 : 118) + notifBump)
                   : (cliphistOpen && cliphistPreviewing) ? 380
                   : miniDashboard ? 155
                   : spotlight
@@ -401,6 +435,7 @@ ShellRoot {
       readonly property real baseRadius: notificationModule.active ? 99
         : cliphistOpen && cliphistPreviewing ? 33
         : cliphistOpen ? 28
+        : wifiPanelOpen ? 25
         : controlCenter ? (notificationModule.notifications.length > 0
           ? (mprisModule.hasPlayer ? 27 : 25)
           : (mprisModule.hasPlayer ? 26 : 22))
@@ -422,7 +457,7 @@ ShellRoot {
           NumberAnimation { duration: 225; easing.type: Easing.OutExpo }
       }
 
-      color: bg
+      color: wifiPanelOpen ? Theme.bgD : bg
 
       onCalendarShownChanged: if (calendarLoader.item) calendarLoader.item.shown = box.calendarShown
 
@@ -457,8 +492,10 @@ ShellRoot {
 
           // restrict control center to only accept left click
           if (box.controlCenter) {
-            if (mouse.button === Qt.LeftButton)
+            if (mouse.button === Qt.LeftButton) {
                 box.controlCenter = false
+                box.wifiPanelOpen = false
+            }
             return
           }
 
@@ -784,7 +821,7 @@ ShellRoot {
       Item {
         anchors.centerIn: parent
         width: box.implicitWidth - 24
-        opacity: box.controlCenter && box.activeOsd === "" && !notificationModule.active && !box.powerMenu ? 1 : 0
+        opacity: box.controlCenter && box.activeOsd === "" && !notificationModule.active && !box.powerMenu && !box.wifiPanelOpen ? 1 : 0
         visible: opacity > 0
         height: box.controlCenter && box.activeOsd === "" ? box.implicitHeight - 25 : 0
 
@@ -798,6 +835,39 @@ ShellRoot {
         ControlCenterPanel {
           id: ccPanel
           anchors.fill: parent
+        }
+      }
+
+      // wifi panel, takes over the cc content inside the box
+      Item {
+        id: wifiPanelHost
+        anchors.centerIn: parent
+        width: Math.max(0, box.width - 35)
+        height: box.wifiPanelOpen ? Math.max(0, box.height - 25) : 0
+        opacity: box.wifiPanelOpen
+                 && !notificationModule.active
+                 && box.activeOsd === "" ? 1 : 0
+        // not "opacity > 0": an invisible item cannot take focus, and the panel
+        // needs it for the escape/arrow/enter handlers
+        visible: box.wifiPanelOpen
+        clip: true
+
+        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutExpo } }
+
+        Loader {
+          id: wifiPanelLoader
+          anchors.fill: parent
+          active: box.wifiPanelLoaded
+          asynchronous: true
+
+          sourceComponent: Component {
+            WifiPanel {
+              id: wifiPanel
+              anchors.fill: parent
+              shown: box.wifiPanelOpen
+              onCloseRequested: box.wifiPanelOpen = false
+            }
+          }
         }
       }
 
@@ -1019,6 +1089,7 @@ ShellRoot {
     function onActiveChanged() {
         if (notificationModule.active) {
             notifFullscreenMode = fullscreenActive
+            box.wifiPanelOpen = false
         } else {
             notifFullscreenMode = false
         }

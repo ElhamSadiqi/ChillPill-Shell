@@ -80,8 +80,8 @@ Singleton {
     // connectivity
     property string netFg: "#6791dc" // network / bluetooth pill icon
     property string netFgOff: "#9ea9bd" // disconnected icon
-    property string netConnected: "#4173c4"
-    property string netConnectedFg: "#c8d7ef"
+    property string netConnected: "#4175c5"
+    property string netConnectedFg: "#c9d7ef"
     property string netFail: "#e94545"
     property string netBtn: "#3874d7"
     property string netBtnHover: "#3065be"

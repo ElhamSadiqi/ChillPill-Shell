@@ -16,18 +16,18 @@ RowLayout {
   property bool notificationPopup: false
   property bool controlCenterOpen: false
   property bool mediaAutoOpened: false
-  property bool wifiPanelOpened: false
   property bool btPanelOpened: false
   property bool hasPlayer: false
   property real playerHeight: 0
 
-  property real wifiPanelX: 0
   property real btPanelX: 0
 
   function refreshPanelPositions() {
-    wifiPanelX = root.mapToGlobal(root.width, 0).x - (600 * root.dpi) - (30 * root.dpi)
     btPanelX = root.mapToGlobal(root.width, 0).x + (29 * root.dpi)
   }
+
+  // the wifi panel lives in the cc box (see shell.qml), so just ask for a toggle
+  signal wifiPanelToggleRequested()
 
   anchors.top: parent.top
   anchors.topMargin: hasPlayer ? playerHeight + 93 : 5
@@ -37,15 +37,11 @@ RowLayout {
   anchors.rightMargin: 5 * dpi
 
   onControlCenterOpenChanged: {
-    if (!controlCenterOpen) {
-      root.wifiPanelOpened = false
-      root.btPanelOpened = false
-    }
+    if (!controlCenterOpen) root.btPanelOpened = false
   }
 
   // wifi
   Rectangle {
-    id: wifiBtn
     implicitWidth: root.buttonWidth
     implicitHeight: root.buttonHeight
     radius: root.buttonRadius
@@ -81,9 +77,7 @@ RowLayout {
       cursorShape: Qt.PointingHandCursor
       onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
-          root.refreshPanelPositions()
-          root.wifiPanelOpened = !root.wifiPanelOpened
-          if (root.wifiPanelOpened && WifiController.enabled) WifiController.refreshNetworks(true)
+          root.wifiPanelToggleRequested()   // WifiPanel rescans on open
           return
         }
         WifiController.setEnabled(!WifiController.enabled)
@@ -91,17 +85,8 @@ RowLayout {
     }
   }
 
-  WifiPanel {
-    visible: root.wifiPanelOpened
-    anchorX: root.wifiPanelX
-    anchorY: 0
-  }
-
   onNotificationPopupChanged: {
-    if (root.notificationPopup) {
-      root.wifiPanelOpened = false
-      root.btPanelOpened = false
-    }
+    if (root.notificationPopup) root.btPanelOpened = false
   }
 
   // silent notifications

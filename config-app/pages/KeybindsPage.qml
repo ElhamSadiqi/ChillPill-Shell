@@ -54,6 +54,7 @@ Page {
         "hl.bind(mainMod .. \" + D\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call spotlight toggle\"))\n" +
         "hl.bind(mainMod .. \" + W\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call wallpaperSwitcher toggle\"))\n" +
         "hl.bind(mainMod .. \" + Escape\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call powerMenu toggle\"))\n" +
+        "hl.bind(mainMod .. \" + CTRL + W\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call wifiState toggle\"))\n" +
         "-- <<< chillpill-shell keybinds"
 
     function paste() {
@@ -76,7 +77,7 @@ Page {
     function parseCheck(t) {
         try {
             var rep = JSON.parse(t)
-            var order = ["controlCenter", "cliphist", "miniDashboard", "spotlight", "wallpaperSwitcher", "powerMenu"]
+            var order = ["controlCenter", "cliphist", "miniDashboard", "spotlight", "wallpaperSwitcher", "powerMenu", "wifiState"]
             var arr = []
             for (var i = 0; i < order.length; i++) {
                 var s = order[i]
