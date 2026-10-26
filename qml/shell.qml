@@ -65,9 +65,16 @@ ShellRoot {
 
   IpcHandler {
     target: "wifiState"
-    function toggle(): void { box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.wifiPanelOpen = !box.wifiPanelOpen; box.controlCenter = box.wifiPanelOpen }
-    function show(): void { box.controlCenter = true; box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.wifiPanelOpen = true }
+    function toggle(): void { box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.bluetoothPanelOpen = false; box.wifiPanelOpen = !box.wifiPanelOpen; box.controlCenter = box.wifiPanelOpen }
+    function show(): void { box.controlCenter = true; box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.bluetoothPanelOpen = false; box.wifiPanelOpen = true }
     function hide(): void { box.powerMenu = false; box.wifiPanelOpen = false }
+  }
+
+  IpcHandler {
+    target: "bluetoothState"
+    function toggle(): void { box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.wifiPanelOpen = false; box.bluetoothPanelOpen = !box.bluetoothPanelOpen; box.controlCenter = box.bluetoothPanelOpen }
+    function show(): void { box.controlCenter = true; box.miniDashboard = false; box.cliphistOpen = false; box.spotlight = false; box.wallpaperSwitcherOpen = false; box.powerMenu = false; box.wifiPanelOpen = false; box.bluetoothPanelOpen = true }
+    function hide(): void { box.powerMenu = false; box.bluetoothPanelOpen = false }
   }
 
   function capitalize(str) {
@@ -127,7 +134,7 @@ ShellRoot {
   PanelWindow {
     id: panelWindow
     WlrLayershell.layer: WlrLayershell.Top
-    WlrLayershell.keyboardFocus: (box.wifiPanelOpen || box.cliphistOpen || box.spotlight || box.wallpaperSwitcherOpen || box.powerMenu ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None)
+    WlrLayershell.keyboardFocus: (box.wifiPanelOpen || box.bluetoothPanelOpen || box.cliphistOpen || box.spotlight || box.wallpaperSwitcherOpen || box.powerMenu ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None)
     implicitHeight: Math.max(885 * scale, calendarLoader.item && calendarLoader.item.visible
             ? calendarLoader.y + calendarLoader.item.height : 0)
     onScreenChanged: console.log("dpi:", screen.devicePixelRatio)
@@ -318,6 +325,25 @@ ShellRoot {
         interval: 520
         onTriggered: box.wifiPanelLoaded = false
       }
+      property bool bluetoothPanelOpen: false
+      // the panel is a Loader (see bluetoothPanelHost): built on first open,
+      // kept alive just long enough for the close fade to render
+      property bool bluetoothPanelLoaded: false
+      onBluetoothPanelOpenChanged: {
+        if (bluetoothPanelOpen) {
+          bluetoothPanelLoaded = true
+          bluetoothPanelUnloadTimer.stop()
+        } else {
+          bluetoothPanelUnloadTimer.restart()
+        }
+      }
+
+      Timer {
+        id: bluetoothPanelUnloadTimer
+        // the panel's own reveal-out is 460ms
+        interval: 520
+        onTriggered: box.bluetoothPanelLoaded = false
+      }
       property bool cliphistOpen: false
       property bool wallpaperSwitcherOpen: false
       property bool cliphistPreviewing: false
@@ -343,7 +369,7 @@ ShellRoot {
       }
 
       onControlCenterChanged: {
-        if (!controlCenter) wifiPanelOpen = false
+        if (!controlCenter) { wifiPanelOpen = false; bluetoothPanelOpen = false }
       }
 
       onChargingChanged: {
@@ -394,10 +420,12 @@ ShellRoot {
       // adjust pill shape conditionally (pill state)
       readonly property real dpi: Config.dpiScale
 
-      // cc width, and the wider box the wifi panel takes over
+      // cc width, and the wider box the wifi/bluetooth panel takes over
       readonly property real ccBaseWidth: 390
       readonly property real wifiPanelBoxWidth: 340
       readonly property real wifiPanelHeight: 350
+      readonly property real bluetoothPanelBoxWidth: 340
+      readonly property real bluetoothPanelHeight: 350
 
       readonly property real baseWidth: activeOsd === "battery" ? osdWidth
                      : activeOsd === "timer" ? osdWidth
@@ -405,7 +433,7 @@ ShellRoot {
                      : activeOsd === "brightness" ? osdWidth
                      : (notificationModule.active && !notifFullscreenMode) ? 320
                      : powerMenu ? 350
-                     : controlCenter ? (wifiPanelOpen ? wifiPanelBoxWidth : ccBaseWidth)
+                     : controlCenter ? (wifiPanelOpen ? wifiPanelBoxWidth : bluetoothPanelOpen ? bluetoothPanelBoxWidth : ccBaseWidth)
                      : spotlight ? 328
                      : miniDashboard ? 420
                      : (cliphistOpen && cliphistPreviewing) ? 400
@@ -421,6 +449,7 @@ ShellRoot {
                   : (notificationModule.active && !notifFullscreenMode) ? 52
                   : powerMenu ? 102
                   : wifiPanelOpen ? wifiPanelHeight
+                  : bluetoothPanelOpen ? bluetoothPanelHeight
                   : controlCenter
                       ? Math.max((mprisModule.hasPlayer ? 240 : 118) + notifBump)
                   : (cliphistOpen && cliphistPreviewing) ? 380
@@ -436,6 +465,7 @@ ShellRoot {
         : cliphistOpen && cliphistPreviewing ? 33
         : cliphistOpen ? 28
         : wifiPanelOpen ? 25
+        : bluetoothPanelOpen ? 25
         : controlCenter ? (notificationModule.notifications.length > 0
           ? (mprisModule.hasPlayer ? 27 : 25)
           : (mprisModule.hasPlayer ? 26 : 22))
@@ -457,7 +487,7 @@ ShellRoot {
           NumberAnimation { duration: 225; easing.type: Easing.OutExpo }
       }
 
-      color: wifiPanelOpen ? Theme.bgD : bg
+      color: wifiPanelOpen || bluetoothPanelOpen ? Theme.bgD : bg
 
       onCalendarShownChanged: if (calendarLoader.item) calendarLoader.item.shown = box.calendarShown
 
@@ -821,7 +851,7 @@ ShellRoot {
       Item {
         anchors.centerIn: parent
         width: box.implicitWidth - 24
-        opacity: box.controlCenter && box.activeOsd === "" && !notificationModule.active && !box.powerMenu && !box.wifiPanelOpen ? 1 : 0
+        opacity: box.controlCenter && box.activeOsd === "" && !notificationModule.active && !box.powerMenu && !box.wifiPanelOpen && !box.bluetoothPanelOpen ? 1 : 0
         visible: opacity > 0
         height: box.controlCenter && box.activeOsd === "" ? box.implicitHeight - 25 : 0
 
@@ -866,6 +896,39 @@ ShellRoot {
               anchors.fill: parent
               shown: box.wifiPanelOpen
               onCloseRequested: box.wifiPanelOpen = false
+            }
+          }
+        }
+      }
+
+      // bluetooth panel, takes over the cc content inside the box
+      Item {
+        id: bluetoothPanelHost
+        anchors.centerIn: parent
+        width: Math.max(0, box.width - 35)
+        height: box.bluetoothPanelOpen ? Math.max(0, box.height - 25) : 0
+        opacity: box.bluetoothPanelOpen
+                 && !notificationModule.active
+                 && box.activeOsd === "" ? 1 : 0
+        // not "opacity > 0": an invisible item cannot take focus, and the panel
+        // needs it for the escape/arrow/enter handlers
+        visible: box.bluetoothPanelOpen
+        clip: true
+
+        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutExpo } }
+
+        Loader {
+          id: bluetoothPanelLoader
+          anchors.fill: parent
+          active: box.bluetoothPanelLoaded
+          asynchronous: true
+
+          sourceComponent: Component {
+            BluetoothPanel {
+              id: bluetoothPanel
+              anchors.fill: parent
+              shown: box.bluetoothPanelOpen
+              onCloseRequested: box.bluetoothPanelOpen = false
             }
           }
         }
@@ -1090,6 +1153,7 @@ ShellRoot {
         if (notificationModule.active) {
             notifFullscreenMode = fullscreenActive
             box.wifiPanelOpen = false
+            box.bluetoothPanelOpen = false
         } else {
             notifFullscreenMode = false
         }

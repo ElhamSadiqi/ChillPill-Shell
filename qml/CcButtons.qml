@@ -16,18 +16,14 @@ RowLayout {
   property bool notificationPopup: false
   property bool controlCenterOpen: false
   property bool mediaAutoOpened: false
-  property bool btPanelOpened: false
   property bool hasPlayer: false
   property real playerHeight: 0
 
-  property real btPanelX: 0
-
-  function refreshPanelPositions() {
-    btPanelX = root.mapToGlobal(root.width, 0).x + (29 * root.dpi)
-  }
-
   // the wifi panel lives in the cc box (see shell.qml), so just ask for a toggle
   signal wifiPanelToggleRequested()
+
+  // the bluetooth panel lives in the cc box (see shell.qml), so just ask for a toggle
+  signal bluetoothPanelToggleRequested()
 
   anchors.top: parent.top
   anchors.topMargin: hasPlayer ? playerHeight + 93 : 5
@@ -35,10 +31,6 @@ RowLayout {
   anchors.right: parent.right
   anchors.leftMargin: 3 * dpi
   anchors.rightMargin: 5 * dpi
-
-  onControlCenterOpenChanged: {
-    if (!controlCenterOpen) root.btPanelOpened = false
-  }
 
   // wifi
   Rectangle {
@@ -83,10 +75,6 @@ RowLayout {
         WifiController.setEnabled(!WifiController.enabled)
       }
     }
-  }
-
-  onNotificationPopupChanged: {
-    if (root.notificationPopup) root.btPanelOpened = false
   }
 
   // silent notifications
@@ -321,19 +309,11 @@ RowLayout {
       cursorShape: Qt.PointingHandCursor
       onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
-          root.refreshPanelPositions()
-          root.btPanelOpened = !root.btPanelOpened
-          if (root.btPanelOpened && BluetoothController.enabled) BluetoothController.refreshDevices(true)
+          root.bluetoothPanelToggleRequested()
           return
         }
         BluetoothController.setEnabled(!BluetoothController.enabled)
       }
     }
-  }
-
-  BluetoothPanel {
-    visible: root.btPanelOpened
-    anchorX: root.btPanelX
-    anchorY: 0
   }
 }

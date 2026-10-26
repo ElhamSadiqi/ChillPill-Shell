@@ -34,6 +34,7 @@ Item {
     playerHeight: box.ccButtonHeight
     notificationPopup: notificationModule.active
     onWifiPanelToggleRequested: box.wifiPanelOpen = !box.wifiPanelOpen
+    onBluetoothPanelToggleRequested: box.bluetoothPanelOpen = !box.bluetoothPanelOpen
   }
 
   CcSliders {

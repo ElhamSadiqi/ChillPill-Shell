@@ -19,7 +19,7 @@ import sys
 
 HEAD = "-- >>> chillpill-shell keybinds (managed)"
 TAIL = "-- <<< chillpill-shell keybinds"
-STATES = ["controlCenter", "cliphist", "miniDashboard", "spotlight", "wallpaperSwitcher", "powerMenu", "wifiState"]
+STATES = ["controlCenter", "cliphist", "miniDashboard", "spotlight", "wallpaperSwitcher", "powerMenu", "wifiState", "bluetoothState"]
 BIND_RE = re.compile(r'hl\.bind\((.*?),.*?exec_cmd\("(.*?)"\)\)')
 IPC_RE = re.compile(r'(?:-p\s+\S*chillpill-shell\S*|chillpill-shell-ipc).*?call\s+(\w+)\s+toggle')
 
