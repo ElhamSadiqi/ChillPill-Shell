@@ -57,7 +57,7 @@ Item {
     property bool removeTarget: false
     property var grabbedEntry: null
     property bool availActive: false
-    property string availName: ""
+    property var availEntry: null
     property bool availOver: false
     property int insertAt: -1
     property real ghostX: -999
@@ -312,10 +312,8 @@ Item {
 
         var a
         if (removing) {
-            var gi = bar.disp.indexOf(entry)
-            if (gi < 0) return
             a = bar.disp.slice()
-            a.splice(gi, 1)
+            a.splice(slot, 1)
         } else {
             if (at < 0) at = slot
             if (at > bar.disp.length) at = bar.disp.length
@@ -329,18 +327,22 @@ Item {
         var changed = a.length !== bar.value.length
         if (!changed) {
             for (var i = 0; i < a.length; i++) {
-                if (a[i] !== bar.value[i]) { changed = true; break }
+                if (a[i] !== bar.value[i]
+                        && JSON.stringify(a[i]) !== JSON.stringify(bar.value[i])) {
+                    changed = true
+                    break
+                }
             }
         }
         if (changed) bar.edited(a)
     }
 
-    function availBegin(name, lx, gx, gy) {
+    function availBegin(entry, lx, gx, gy) {
         bar.lastMoveAt = Date.now()
         bar.availActive = true
-        bar.availName = name
+        bar.availEntry = entry
         bar.grabX = lx
-        var p = bar.thumbProps(name)
+        var p = bar.thumbProps(entry)
         availGhost.icon = p.icon
         availGhost.text = p.text
         availGhost.iconColor = p.color
@@ -359,14 +361,15 @@ Item {
         if (!bar.availActive) return
         var ok = bar.availOver && bar.insertAt >= 0
         var at = bar.insertAt
-        var name = bar.availName
+        var entry = bar.availEntry
         bar.availActive = false
         bar.availOver = false
         bar.insertAt = -1
         bar.ghostX = -999
-        if (ok) {
+        if (ok && entry !== null && entry !== undefined) {
+            var v = typeof entry === "object" ? JSON.parse(JSON.stringify(entry)) : entry
             var a = bar.disp.slice()
-            a.splice(Math.min(at, a.length), 0, name)
+            a.splice(Math.min(at, a.length), 0, v)
             bar.edited(a)
         }
     }

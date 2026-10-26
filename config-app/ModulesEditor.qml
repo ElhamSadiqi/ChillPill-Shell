@@ -14,7 +14,40 @@ ColumnLayout {
     property bool editingModule: false
     property int customIndex: -1
 
-    readonly property var available: known.filter(k => value.indexOf(k) < 0)
+    readonly property var customCache: ConfigStore.customCache
+    readonly property var builtinAvail: known.filter(k => value.indexOf(k) < 0)
+    readonly property var cachedAvail: m.customCache.filter(
+        e => !value.some(o => typeof o === "object" && String(o.run) === String(e.run)))
+    readonly property var available: builtinAvail.concat(cachedAvail)
+
+    function syncCache() {
+        if (!ConfigStore.customCacheLoaded) return
+        var c = m.customCache.slice()
+        for (var i = 0; i < m.value.length; i++) {
+            var e = m.value[i]
+            if (typeof e !== "object" || e === null) continue
+            var run = String(e.run)
+            var idx = -1
+            for (var j = 0; j < c.length; j++)
+                if (String(c[j].run) === run) { idx = j; break }
+            if (idx < 0) c.push(e)
+            else if (JSON.stringify(c[idx]) !== JSON.stringify(e)) c[idx] = e
+        }
+        ConfigStore.setCustomCache(c)
+    }
+
+    function removeFromCache(entry) {
+        ConfigStore.setCustomCache(
+            m.customCache.filter(e => String(e.run) !== String(entry.run)))
+    }
+    onValueChanged: m.syncCache()
+    Component.onCompleted: m.syncCache()
+
+    Connections {
+        target: ConfigStore
+        function onCustomCacheChanged() { m.syncCache() }
+        function onCustomCacheLoadedChanged() { m.syncCache() }
+    }
 
     function openNewCustom() {
         m.customIndex = -1
@@ -133,7 +166,8 @@ ColumnLayout {
                 model: m.available
                 ModuleThumb {
                     id: addThumb
-                    required property string modelData
+                    required property var modelData
+                    readonly property bool isCustom: typeof modelData === "object"
                     height: 30
                     readonly property var props: bar.thumbProps(modelData)
                     icon: props.icon
@@ -146,7 +180,8 @@ ColumnLayout {
                     flag: props.flag === true
                     flagColor: props.flagColor
                     iconSize: props.iconSize || 10
-                    removable: false
+                    removable: addThumb.isCustom
+                    onRemoveRequested: m.removeFromCache(modelData)
                     onDragBegin: (lx, gx, gy) => bar.availBegin(modelData, lx, gx, gy)
                     onDragMove: (gx, gy) => bar.availMove(gx, gy)
                     onDragEnd: bar.availEnd

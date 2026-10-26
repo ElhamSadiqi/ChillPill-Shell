@@ -30,6 +30,59 @@ Singleton {
         root.statusError = isError === true
     }
 
+    // custom module library, kept out of the user config at
+    // ~/.cache/chillpill-shell/custom-modules.json
+    readonly property string cacheDir: Quickshell.env("HOME") + "/.cache/chillpill-shell"
+    readonly property string customModulesPath: cacheDir + "/custom-modules.json"
+    property var customCache: []
+    property bool customCacheLoaded: false
+    property string lastCacheWritten: ""
+
+    function setCustomCache(v) {
+        if (JSON.stringify(v) === JSON.stringify(root.customCache)) return
+        root.customCache = v
+        cacheSaveTimer.restart()
+    }
+
+    Process {
+        id: cacheDirProc
+        running: false
+        command: ["mkdir", "-p", root.cacheDir]
+        Component.onCompleted: running = true
+    }
+
+    Timer {
+        id: cacheSaveTimer
+        interval: 150
+        onTriggered: {
+            var s = JSON.stringify(root.customCache, null, 2) + "\n"
+            root.lastCacheWritten = s
+            customFile.setText(s)
+        }
+    }
+
+    FileView {
+        id: customFile
+        path: root.customModulesPath
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            var t = text()
+            if (t === root.lastCacheWritten) return
+            try {
+                var d = JSON.parse(t)
+                root.customCache = Array.isArray(d) ? d : []
+            } catch (e) {
+                root.customCache = []
+            }
+            root.customCacheLoaded = true
+        }
+        onLoadFailed: {
+            root.customCache = []
+            root.customCacheLoaded = true
+        }
+    }
+
     function reload() { file.reload() }
 
     FileView {
