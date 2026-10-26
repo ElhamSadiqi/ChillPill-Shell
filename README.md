@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![ChillPill-Shell 0.13.1](https://img.shields.io/badge/CP--Shell-0.13.1-blue.svg)](https://github.com/LUCKYS1NGHH/ChillPill-Shell)
+[![ChillPill-Shell 0.14.0](https://img.shields.io/badge/CP--Shell-0.14.0-blue.svg)](https://github.com/LUCKYS1NGHH/ChillPill-Shell)
 [![GitHub Stars](https://img.shields.io/github/stars/LUCKYS1NGHH/ChillPill-Shell?style=social)](https://github.com/LUCKYS1NGHH/ChillPill-Shell/stargazers)
 [![Quickshell 0.3.0+](https://img.shields.io/badge/Quickshell-0.3.0+-green.svg)](https://github.com/quickshell-mirror/quickshell)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-orange.svg)](https://www.gnu.org/licenses/gpl-3.0)
@@ -35,10 +35,10 @@ into your session at all times. It's not bound to any dotfiles.
 ### Resource Usage
 
 - RAM: 200-500 MB (Average 400)
-- CPU: Idle 0%, Average 3%, Min 0.1%, Max 10%
+- CPU: Idle 0%, Average 3%, Min 0.1%, Max 8%
 - GPU: Idle 0%, Average 15%, Min 6%, Max 40%
 
-> CPU and GPU usage varies with system. a better CPU and GPU use less.
+> CPU and GPU usage varies with system; a faster CPU and GPU use less.
 
 #### My Hardware
 
@@ -52,88 +52,55 @@ into your session at all times. It's not bound to any dotfiles.
 
 [Watch the demo on YouTube](https://www.youtube.com/watch?v=t7ydMT4F478)
 
-<table>
-  <tr>
-    <td width="50%">
-      <p align="center"><b>Main pill bar</b></p>
-      <img src="screenshots/image_1.webp" width="100%" alt="Main pill bar showing battery, volume, workspaces, wifi and clock" />
-    </td>
-    <td width="50%">
-      <p align="center"><b>Control center</b></p>
-      <img src="screenshots/image_2.webp" width="100%" alt="Control center with media player, sliders, few buttons and notification stack" />
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <p align="center"><b>Media playing popup</b></p>
-      <img src="screenshots/image_3.webp" width="100%" alt="Media player auto open" />
-    </td>
-    <td width="50%">
-      <p align="center"><b>Notification popup (nusgmon-alert)</b></p>
-      <img src="screenshots/image_4.webp" width="100%" alt="Notification popup of nusgmon-alert.sh" />
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <p align="center"><b>Cliphist (clipboard manager)</b></p>
-      <img src="screenshots/image_5.webp" width="100%" alt="Cliphist clipboard history" />
-    </td>
-    <td width="50%">
-      <p align="center"><b>Mini dashboard — calendar</b></p>
-      <img src="screenshots/image_6.webp" width="100%" alt="Mini dashboard with calendar popup" />
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <p align="center"><b>Mini dashboard — weather</b></p>
-      <img src="screenshots/image_7.webp" width="100%" alt="Mini dashboard with weather popup" />
-    </td>
-    <td width="50%">
-      <p align="center"><b>Volume OSD (has more OSDs like brightness, battery, timer)</b></p>
-      <img src="screenshots/image_8.webp" width="100%" alt="Volume OSD" />
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <p align="center"><b>Spotlight</b></p>
-      <img src="screenshots/image_9.webp" width="100%" alt="Spotlight with applications list, web search, math and shell commands run support">
-    </td>
-    <td width="50%">
-      <p align="center"><b>Control center — Wifi and Bluetooth panel</b></p>
-      <img src="screenshots/image_10.webp" width="100%" alt="Control center with wifi panel opened">
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <p align="center"><b>Wallpaper switcher</b></p>
-      <img src="screenshots/image_11.webp" width="100%" alt="Wallpaper switcher with opened with previews">
-    </td>
-    <td width="50%">
-      <p align="center"><b>Cliphist — Full preview tab (Image; Text also supports)</b></p>
-      <img src="screenshots/image_12.webp" width="100%" alt="Cliphist image full preview tab">
-    </td>
-  </tr>
-</table>
+<div align="center">
+
+<strong>Pill bar · Control Center</strong><br>
+<img src="screenshots/pillBar.webp" width="49%" alt="Pill bar">
+<img src="screenshots/controlCenter.webp" width="49%" alt="Control Center">
+
+<strong>Clipboard manager · Full preview</strong><br>
+<img src="screenshots/clipboardManager.webp" width="49%" alt="Clipboard manager (cliphist)">
+<img src="screenshots/clipboardImageFullPreview.webp" width="49%" alt="Clipboard item full preview">
+
+<strong>Mini dashboard · Weather & Calendar</strong><br>
+<img src="screenshots/miniDashboard-weather.webp" width="49%" alt="Mini dashboard weather">
+<img src="screenshots/miniDashboard-calendar.webp" width="49%" alt="Mini dashboard calendar">
+
+<strong>Wi-Fi · Bluetooth states</strong><br>
+<img src="screenshots/wifiState.webp" width="49%" alt="Wi-Fi state">
+<img src="screenshots/bluetoothState.webp" width="49%" alt="Bluetooth state">
+
+<strong>Media Popup · Spotlight</strong><br>
+<img src="screenshots/spotlight.webp" width="49%" alt="Spotlight">
+<img src="screenshots/mediaPopup.webp" width="49%" alt="Media popup">
+
+<strong>Wallpaper switcher · Power menu</strong><br>
+<img src="screenshots/wallpaperSwitcher.webp" width="49%" alt="Wallpaper switcher">
+<img src="screenshots/powerMenu.webp" width="49%" alt="Power menu">
+
+</div>
 
 ## Features (Pill States)
 
-- **Main Pill Bar**                - Battery, volume, workspaces, network, clock (default; customizable) — for more module options, see 'Know more' below.
-- **Control Center**               - Media player, buttons (WiFi, Silent Notifs, Timer, Bluetooth), volume & brightness sliders, notification stack
-- **Cliphist (Clipboard Manager)** - Search (optional fuzzy search), clipboard image preview, item index status, multi select to delete many items at once (<kbd>Shift</kbd> + <kbd>Up</kbd>/<kbd>Down</kbd> range, <kbd>Shift</kbd> + <kbd>Space</kbd> pick, <kbd>Del</kbd> to delete), <kbd>Tab</kbd> to full preview the clipboard image/text
-- **Mini Dashboard**               - Profile image, username, hostname, uptime, battery, basic network info, today's data usage, datetime, weather, calendar, power buttons (lock, sleep, shutdown, reboot)
-  - **Calendar Popup**             - Previous/Next month buttons, event dates
-  - **Weather Popup**              - Feel, humidity, wind, sunrise & sunset, upcoming 2 days weather forecast, manual refresh button
-- **Spotlight**                    - List of applications (<kbd>Tab</kbd> to read the long app description), optional fuzzy search for apps, web search (<kbd>Tab</kbd> to expand the full search url), math and shell commands run
-- **DBus Notification**            - App icon (optional), summary, body (YES! you can ditch swaync/dunst fully now)
-- **OSD**                          - Battery, volume, brightness, timer
-- **Wallpaper switcher**           - A wallpaper switcher. <kbd>.</kbd> or <kbd>CTRL</kbd> + <kbd>H</kbd> to see hidden images (dot prefixed)
-- **Power Menu**                   - 5 actions (Lock, Sleep, Logout, Restart, Shutdown) and action confirmation prompt
+- **Main pill bar**                  - Battery, volume, workspaces, network, clock (default; fully customizable in the config app) — for more module options, see 'Know more' below.
+- **Control center**                 - Media player, buttons (WiFi, Silent Notifs, Timer, Bluetooth), volume & brightness sliders, notification stack
+  - **Wifi state**
+  - **Bluetooth state**
+- **Cliphist (clipboard manager)**   - Search (optional fuzzy search), clipboard image preview, item index status, multi select to delete many items at once (<kbd>Shift</kbd> + <kbd>Up</kbd>/<kbd>Down</kbd> range, <kbd>Shift</kbd> + <kbd>Space</kbd> pick, <kbd>Del</kbd> to delete), <kbd>Tab</kbd> to full preview the clipboard image/text
+- **Mini dashboard**                 - Profile image, username, hostname, uptime, battery, basic network info, today's data usage, datetime, weather, calendar, power buttons (lock, sleep, shutdown, reboot)
+  - **Calendar popup**              - Previous/Next month buttons, event dates
+  - **Weather popup**               - Feel, humidity, wind, sunrise & sunset, upcoming 2 days weather forecast, manual refresh button
+- **Spotlight**                      - List of applications (<kbd>Tab</kbd> to read the long app description), optional fuzzy search for apps, web search (<kbd>Tab</kbd> to expand the full search url), math and shell commands run
+- **DBus notification**              - App icon (optional), summary, body (YES! you can ditch swaync/dunst fully now)
+- **OSD**                            - Battery, volume, brightness, timer
+- **Wallpaper switcher**             - <kbd>.</kbd> or <kbd>CTRL</kbd> + <kbd>H</kbd> to see hidden images (dot prefixed)
+- **Power menu**                     - 5 actions (Lock, Sleep, Logout, Restart, Shutdown) and action confirmation prompt
 
 <details>
 <summary>Know more</summary>
 
 ---
-- Main pill bar modules has tooltips
+- Main pill bar modules have tooltips
 
 - Extra modules available for the pill bar beyond the defaults: `weather`, `bluetooth`, `vpn`, `notifications`, `brightness`, `audioVisualizer`
 
@@ -152,26 +119,24 @@ into your session at all times. It's not bound to any dotfiles.
 
 - Audio, workspaces, bluetooth and wifi in pill bar are clickable.
 
-- Control center's media player progress bar is not only for status, it's usable to control the media you playing.
-  also timer minutes can be change by right click and hold-to-burst (stop) it when running.
+- Control center's media player progress bar is not only for status, it's usable to control the media you are playing.
+  Timer minutes can be changed by right click, and you can hold-to-burst (stop) to halt the running timer.
 
 - The live audio spectrum (needs `cava`) is drawn in two independent flavours: bottom-anchored in the control center's
-  media player (toggled by `showAudioVisuals`), and mirrored around its middle line (a wave instead of a skyline) -x
+  media player (toggled by `showAudioVisuals`), and mirrored around its middle line (a wave instead of a skyline)
   as the `audioVisualizer` pill bar module (toggled by adding/removing it from `pillModules`). Either one can be used
   without the other.
 
-- Control center has WiFi controller (panel) which has list of active networks and has password prompt.
+- Control center has a Wi-Fi state which has a list of active networks with a password prompt, including USB tethering.
 
-- The wifi panel also includes the USB tethering toggle.
-
-- Control center has also Bluetooth controller which has list of active, pair & connected devices/networks, device battery. here's 3 cases to connect a bluetooth device first time:
+- Control center also has a Bluetooth controller which lists the active, pairable & connected devices/networks and device battery. here's 3 cases to connect a bluetooth device first time:
 
   - case 1: device wants a PIN or passkey typed in
   - case 2: device just wants us to display a code
   - case 3: device wants a yes/no confirmation of a shown passkey
 
-- Cliphist shows image previews from `~/.cache/chillpill-shell/cliphist-imgs` by converting image binaries into real images and save there. if
-  you want these images cache to auto delete when you delete the cliphist (clipboard manager) image item, then there's `deleteCliphistImgCache` config
+- Cliphist shows image previews from `~/.cache/chillpill-shell/cliphist-imgs` by converting image binaries into real images and saving them there. If
+  you want this image cache to auto delete when you delete the cliphist (clipboard manager) image item, there's the `deleteCliphistImgCache` config
   option (enabled by default).
 
 - In Cliphist full preview tab (which opens through <kbd>Tab</kbd> key), you can switch to other item by <kbd>Up</kbd>/<kbd>Down</kbd> keys,
@@ -186,19 +151,22 @@ into your session at all times. It's not bound to any dotfiles.
   - <kbd>Del</kbd>: deletes the marked items, or the highlighted one when nothing is marked
   - <kbd>Esc</kbd>: drops the marks first, closes the panel on the second press
 
-- Notifications, brightness and volume are able to show in slide animation (similar to iOS mute) while you playing video game or watching movie
+- Notifications, brightness and volume are able to show in slide animation (similar to iOS mute) while you are playing a video game or watching a movie
   in full screen.
 
 - Your today's data usage in mini dashboard is shown by [nusgmon](https://github.com/LUCKYS1NGHH/nusgmon) (i am the creator of it too).
 
-- Wallpaper switcher shows you the filename of the image on hover. uses `awww` in backend to update the wallpaper by default (optional dep).
+- Wallpaper switcher shows you the filename of the image on hover, and uses `awww` in the backend to update the wallpaper by default (optional dep).
 ---
 </details>
 
 ## Configuration App
 > Raw config is still located at `~/.config/chillpill-shell/config.jsonc`
 
-<img src="screenshots/config-app.webp" width="100%" alt="GUI Config App for ChillPill-Shell">
+The GUI writes that same file, every option lives on one of these pages, and the search bar at the
+top filters every visible setting across them.
+
+<img src="screenshots/configApp.webp" width="100%" alt="GUI Config App for ChillPill-Shell">
 
 ## Lockscreen (Optional)
 > Default lockscreen app - authenticates through PAM's `login` service and uses the
@@ -263,7 +231,7 @@ The command may print **plain text** (used as `{text}`) or a **JSON object** per
 { "icon": "", "color": "#6d9fd7", "text": "45°C", "tooltip": "45°C CPU Temperature" }
 ```
 
-A sample script ship in the repo and get installed to
+A sample script ships in the repo and gets installed to
 `~/.config/chillpill-shell/modules/`: `cpu-temp.sh` (one-shot CPU temperature,
 prints a temperature-dependent `{icon, color, text, tooltip}` JSON line).
 Scripts in that directory can be referenced by their plain file name, so
@@ -272,42 +240,71 @@ Use your custom scripts to see specific/niche info in ChillPill-Shell's Pill Bar
 
 ## Dependencies
 > [!NOTE]
-> Currently it's tested only on: **Arch Linux** and **NixOS** + **Hyprland**.
-> Packages below are Arch's; find the equivalent for your distro.
+> Tested on **Arch Linux** and **NixOS** + **Hyprland**. Package names are Arch's.
+> `install.sh` handles everything below for Arch users.
 
-- [cliphist](https://github.com/sentriz/cliphist)
-- [nusgmon](https://github.com/LUCKYS1NGHH/nusgmon) (AUR package; non-Arch users can use the setup script instead)
-- [inotify-tools](https://github.com/inotify-tools/inotify-tools)
-- [brightnessctl](https://github.com/Hummer12007/brightnessctl)
-- [wl-clipboard](https://github.com/bugaevc/wl-clipboard)
-- [pipewire](https://github.com/PipeWire/pipewire)
-- [blueman](https://github.com/blueman-project/blueman)
-- Qt Multimedia (`qt6-multimedia` on Arch)
+<details>
+<summary>What each package powers</summary>
 
-> [!TIP]
-> `install.sh` auto-installs all of the above for Arch users, **except** these optional packages:
+---
 
-- Monocraft Font (`ttf-monocraft-git` / `ttf-monocraft-nerd` on AUR)
-- JetBrainsMono Nerd Font (`ttf-jetbrains-mono-nerd` on Arch)
-- `qt6-imageformats` (on Arch) more image format support (e.g. WEBP) for wallpaper previews
-- `holidays` (Python lib) event dates in calendar; `install.sh` prompts to install this one
+| Package | Powers |
+|---|---|
+| [Quickshell](https://quickshell.org/) | The whole shell - bar, states, config app |
+| [cliphist](https://github.com/sentriz/cliphist) | Pill bar · Cliphist (clipboard manager) state |
+| [nusgmon](https://github.com/LUCKYS1NGHH/nusgmon) | Mini dashboard · today's data usage |
+| [brightnessctl](https://github.com/Hummer12007/brightnessctl) | Brightness module, slider and OSD |
+| [wl-clipboard](https://github.com/bugaevc/wl-clipboard) | Wayland clipboard I/O |
+| [inotify-tools](https://github.com/inotify-tools/inotify-tools) | File watchers (wallpaper switch, notification sounds) |
+| [pipewire](https://github.com/PipeWire/pipewire) | Audio server (volume, media player, visualizer) |
+| [blueman](https://github.com/blueman-project/blueman) | Bluetooth manager state |
+| Qt Multimedia (`qt6-multimedia`) | For notification popup sound |
+| [python-psutil](https://github.com/giampaolo/psutil) | Data usage in the mini dashboard |
 
-> [!TIP]
-> Holidays are configured under **Weather & Data** in the config app: `Country` picks the
-> nation, `Holidays` is the master toggle, `All categories` includes every category the
-> country supports, `Categories` takes a comma-separated list (e.g. `public,optional`),
-> and `Subdivision` narrows it to a state/province code (e.g. `MH`). These map straight to
-> `calendar_events.py --all / --categories / --subdiv`, and the cache filename changes with
-> them so switching preferences never shows stale data.
+---
+</details>
 
-- `cava` for showing audio visuals
-- `awww` for wallpaper switcher if you don't use custom wallpaper script
+**Optional** - the core shell runs fine without them:
+
+```bash
+paru -S --needed ttf-jetbrains-mono-nerd qt6-imageformats cava awww   # font, image formats, audio spectrum, wallpaper backend
+pip install holidays                                                  # calendar event dates (install.sh prompts for this)
+```
+
+<details>
+<summary>Optional packages explained</summary>
+
+---
+
+- **Fonts** - Monocraft (`ttf-monocraft-git` / `ttf-monocraft-nerd`) or JetBrainsMono Nerd Font (`ttf-jetbrains-mono-nerd`); pick one in **Appearance**
+- **`qt6-imageformats`** - WEBP & friends for the wallpaper previews
+- **`holidays`** (Python lib) - event dates in the calendar popup (**Weather & Data** page configures it)
+- **`cava`** - live audio spectrum (control center visuals / `audioVisualizer` pill module)
+- **`awww`** - wallpaper switcher backend, if you don't use your own wallpaper script
+
+---
+</details>
+
+<details>
+<summary>Holidays configuration</summary>
+
+---
+
+Configured under **Weather & Data** in the config app: `Country` picks the
+nation, `Holidays` is the master toggle, `All categories` includes every category the
+country supports, `Categories` takes a comma-separated list (e.g. `public,optional`),
+and `Subdivision` narrows it to a state/province code (e.g. `MH`). These map straight to
+`calendar_events.py --all / --categories / --subdiv`, and the cache filename changes with
+them so switching preferences never shows stale data.
+
+---
+</details>
 
 ## Install
 
 > [!TIP]
 > Use my Hyprland [dotfiles](https://github.com/LUCKYS1NGHH/dotfiles), it's also made for No Dedicated GPU machines.
-> You will get more better performance.
+> You will get better performance.
 
 #### Arch users (AUR)
 
@@ -378,7 +375,7 @@ sudo ./uninstall.sh
 
 ### Auto startup
 
-To auto-run at every time you start your Hyprland, paste this code in your `~/.config/hypr/hyprland.lua` config file
+To auto-run ChillPill-Shell whenever Hyprland starts, paste this code in your `~/.config/hypr/hyprland.lua` config file
 
 ```lua
 hl.on("hyprland.start", function()
