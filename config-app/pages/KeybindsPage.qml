@@ -45,18 +45,33 @@ Page {
         copyTimer.restart()
     }
 
-    // single source of truth for the managed block; mainMod must exist in hyprland.lua
-    readonly property string block:
-        "-- >>> chillpill-shell keybinds (managed)\n" +
-        "hl.bind(mainMod .. \" + CTRL + C\",  hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call controlCenter toggle\"))\n" +
-        "hl.bind(mainMod .. \" + CTRL + V\",  hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call cliphist toggle\"))\n" +
-        "hl.bind(mainMod .. \" + CTRL + B\",  hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call miniDashboard toggle\"))\n" +
-        "hl.bind(mainMod .. \" + D\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call spotlight toggle\"))\n" +
-        "hl.bind(mainMod .. \" + W\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call wallpaperSwitcher toggle\"))\n" +
-        "hl.bind(mainMod .. \" + Escape\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call powerMenu toggle\"))\n" +
-        "hl.bind(mainMod .. \" + CTRL + W\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call wifiState toggle\"))\n" +
-        "hl.bind(mainMod .. \" + SHIFT + B\", hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call bluetoothState toggle\"))\n" +
-        "-- <<< chillpill-shell keybinds"
+    // single source of truth per state; mainMod must exist in hyprland.lua.
+    // the block is built from what check() reports, so the user's own combo
+    // expressions (verbatim, e.g. mainMod .. " + X") end up in the preview
+    // and in the paste, not a fixed default set.
+    readonly property var defaultBinds: [
+        { state: "controlCenter",     expr: "mainMod .. \" + CTRL + C\"" },
+        { state: "cliphist",          expr: "mainMod .. \" + CTRL + V\"" },
+        { state: "miniDashboard",     expr: "mainMod .. \" + CTRL + B\"" },
+        { state: "spotlight",         expr: "mainMod .. \" + D\"" },
+        { state: "wallpaperSwitcher", expr: "mainMod .. \" + W\"" },
+        { state: "powerMenu",         expr: "mainMod .. \" + Escape\"" },
+        { state: "wifiState",         expr: "mainMod .. \" + SHIFT + W\"" },
+        { state: "bluetoothState",    expr: "mainMod .. \" + SHIFT + B\"" }
+    ]
+
+    readonly property string block: {
+        var byState = {}
+        for (var i = 0; i < stateList.length; i++)
+            if (stateList[i].expr !== "") byState[stateList[i].state] = stateList[i].expr
+        var lines = []
+        for (var d = 0; d < defaultBinds.length; d++) {
+            var db = defaultBinds[d]
+            var expr = byState[db.state] || db.expr
+            lines.push("hl.bind(" + expr + ",  hl.dsp.exec_cmd(\"qs ipc -p /usr/share/chillpill-shell call " + db.state + " toggle\"))")
+        }
+        return "-- >>> chillpill-shell keybinds (managed)\n" + lines.join("\n") + "\n-- <<< chillpill-shell keybinds"
+    }
 
     function paste() {
         pasteProc.command = ["/usr/bin/python3", "/usr/share/chillpill-shell/scripts/paste_keybinds.py", "paste", pg.block]
@@ -86,6 +101,7 @@ Page {
                 arr.push({
                     state: s,
                     combo: r.combo === "" ? "-" : r.combo,
+                    expr: r.expr === undefined ? "" : r.expr,
                     ok: r.managed && r.count === 1,
                     warn: r.count > 1,
                     note: r.count === 0 ? "missing" : (r.count > 1 ? "duplicate" : (r.managed ? "managed" : "old line"))
@@ -121,7 +137,7 @@ Page {
 
     Heading { text: "KEYBINDS" }
     Text {
-        text: "Pastes a managed bind block (replaces the old one, never duplicates). mainMod must be defined in your config. Binds activate on \"hyprctl reload\" or restart."
+        text: "Pastes a managed bind block. Your existing key combinations are kept as-is — defaults are only filled in for states you haven't bound, and old/duplicate binds for the same state are cleaned up. mainMod must be defined in your config. Binds activate on \"hyprctl reload\" or restart."
         color: Theme.fg5
         font.family: Theme.fontFamily
         font.pixelSize: 11
