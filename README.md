@@ -95,6 +95,7 @@ into your session at all times. It's not bound to any dotfiles.
 - **OSD**                            - Battery, volume, brightness, timer
 - **Wallpaper switcher**             - <kbd>.</kbd> or <kbd>CTRL</kbd> + <kbd>H</kbd> to see hidden images (dot prefixed)
 - **Power menu**                     - 5 actions (Lock, Sleep, Logout, Restart, Shutdown) and action confirmation prompt
+- **Theme picker**                   - One-click live theme switching from the pill
 
 <details>
 <summary>Know more</summary>
@@ -208,6 +209,18 @@ clock box under the greeting - the control center uses, with cover art, seekable
 progress bar and working prev / play-pause / next.
 
 The wallpaper is `$LOCK_WALLPAPER`, else `~/.cache/chillpill-shell/last_wallpaper`.
+
+## Theming
+
+Open the **Theme picker** (default <kbd>MOD</kbd> + <kbd>T</kbd>, bindable from the config app's Keybinds page), every preset in `~/.cache/chillpill-shell/themes/*.json`.
+
+A theme is a plain JSON file of colors, so every key mirrors a property in `Theme.qml` (`bg`, `fg`, `accent`, `ok`, `danger`, ...), so you can write your own preset without touching the shell. Drop it in the themes DIR and it appears in the picker on next open.
+
+```bash
+qs ipc -p /usr/share/chillpill-shell call theme toggle           # open the picker
+qs ipc -p /usr/share/chillpill-shell call theme apply whiteghost
+qs ipc -p /usr/share/chillpill-shell call theme apply ""         # back to the OG dark theme
+```
 
 ## Custom Pill Modules
 
@@ -397,6 +410,7 @@ Keybindings are highly recommended for ChillPill-Shell in your Hyprland config. 
 | `powerMenu` | `MOD + Escape` | Power menu actions |
 | `wifiState` | `MOD + SHIFT + W` | Wi-Fi State |
 | `bluetoothState` | `MOD + SHIFT + B` | Bluetooth State |
+| `theme` | `MOD + T` | Theme Picker |
 
 `MOD` is the `mainMod` variable (typically <kbd>SUPER</kbd> key) from your config, e.g. `hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc -p /usr/share/chillpill-shell call spotlight toggle"))`.
 On NixOS the command is `chillpill-shell-ipc call <state> toggle` instead of `qs ipc -p /usr/share/chillpill-shell`

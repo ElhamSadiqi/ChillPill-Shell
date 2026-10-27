@@ -39,8 +39,8 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: WifiController.enabled
-            ? (wifiHover.hovered ? Qt.lighter(Theme.ccActiveBg, 1.2) : Theme.ccActiveBg)
-            : (wifiHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
+            ? (wifiHover.hovered ? Theme.chipHover(Theme.ccActiveBg) : Theme.ccActiveBg)
+            : (wifiHover.hovered ? Theme.chipHover(root.buttonBgOff) : root.buttonBgOff)
     scale: wifiMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
     Behavior on scale { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
@@ -85,8 +85,8 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: notificationModule.dndEnabled
-    ? (dndHover.hovered ? Qt.lighter(Theme.ccDndBg, 1.2) : Theme.ccDndBg)
-    : (dndHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
+    ? (dndHover.hovered ? Theme.chipHover(Theme.ccDndBg) : Theme.ccDndBg)
+    : (dndHover.hovered ? Theme.chipHover(root.buttonBgOff) : root.buttonBgOff)
     scale: dndMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
     Behavior on scale { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
@@ -113,8 +113,8 @@ RowLayout {
     implicitHeight: root.buttonHeight
     radius: root.buttonRadius
     color: countdownModule.running
-           ? (timerHover.hovered ? Qt.lighter(Theme.ccActiveBg2, 1.2) : Theme.ccActiveBg2)
-           : (timerHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
+           ? (timerHover.hovered ? Theme.chipHover(Theme.ccActiveBg2) : Theme.ccActiveBg2)
+           : (timerHover.hovered ? Theme.chipHover(root.buttonBgOff) : root.buttonBgOff)
     scale: timerMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
     Behavior on scale { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
@@ -279,8 +279,8 @@ RowLayout {
     radius: root.buttonRadius
     visible: root.controlCenterOpen && !root.mediaAutoOpened
     color: BluetoothController.enabled
-            ? (btHover.hovered ? Qt.lighter(Theme.ccActiveBg, 1.2) : Theme.ccActiveBg)
-            : (btHover.hovered ? Qt.lighter(root.buttonBgOff, 1.3) : root.buttonBgOff)
+            ? (btHover.hovered ? Theme.chipHover(Theme.ccActiveBg) : Theme.ccActiveBg)
+            : (btHover.hovered ? Theme.chipHover(root.buttonBgOff) : root.buttonBgOff)
     scale: btMouse.pressed ? 0.93 : 1.0
     Behavior on color { ColorAnimation { duration: 150 } }
     Behavior on scale { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }

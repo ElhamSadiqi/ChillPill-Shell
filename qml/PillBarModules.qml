@@ -13,6 +13,7 @@ Row {
            && !box.powerMenu
            && box.activeOsd === ""
            && !box.wallpaperSwitcherOpen
+           && !box.themePicker
            && !box.spotlight ? 1 : 0
   visible: opacity > 0
 

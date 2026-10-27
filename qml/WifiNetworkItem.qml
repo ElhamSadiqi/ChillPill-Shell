@@ -26,7 +26,7 @@ Rectangle {
 
   height: 44
   radius: 14
-  color: mouse.containsMouse ? Theme.bg3 : selected ? Theme.bg2 : Qt.lighter(Theme.bg, 1.10)
+  color: mouse.containsMouse ? Theme.bg3 : selected ? Theme.bg4 : Theme.rowBg
   scale: mouse.pressed ? 0.985 : 1
 
   Behavior on color { ColorAnimation { duration: 100 } }

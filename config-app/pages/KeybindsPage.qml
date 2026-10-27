@@ -57,7 +57,8 @@ Page {
         { state: "wallpaperSwitcher", expr: "mainMod .. \" + W\"" },
         { state: "powerMenu",         expr: "mainMod .. \" + Escape\"" },
         { state: "wifiState",         expr: "mainMod .. \" + SHIFT + W\"" },
-        { state: "bluetoothState",    expr: "mainMod .. \" + SHIFT + B\"" }
+        { state: "bluetoothState",    expr: "mainMod .. \" + SHIFT + B\"" },
+        { state: "theme",             expr: "mainMod .. \" + T\"" }
     ]
 
     readonly property string block: {
@@ -93,7 +94,7 @@ Page {
     function parseCheck(t) {
         try {
             var rep = JSON.parse(t)
-            var order = ["controlCenter", "cliphist", "miniDashboard", "spotlight", "wallpaperSwitcher", "powerMenu", "wifiState", "bluetoothState"]
+            var order = ["controlCenter", "cliphist", "miniDashboard", "spotlight", "wallpaperSwitcher", "powerMenu", "wifiState", "bluetoothState", "theme"]
             var arr = []
             for (var i = 0; i < order.length; i++) {
                 var s = order[i]

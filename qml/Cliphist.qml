@@ -1096,7 +1096,7 @@ Item {
                                 id: copiedLabel
                                 anchors.centerIn: parent
                                 text: "Copied"
-                                color: Theme.white
+                                color: Theme.fg
                                 font { family: Theme.fontFamily; pixelSize: 12; weight: 600 }
                             }
                         }

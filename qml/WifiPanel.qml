@@ -171,7 +171,7 @@ Item {
     implicitWidth: 38
     implicitHeight: 20
     radius: 11
-    color: checked ? onColor : Theme.bg3
+    color: checked ? onColor : Theme.toggleOffBg
     scale: tgMa.pressed ? 0.95 : 1
 
     Behavior on color { ColorAnimation { duration: 140 } }
@@ -263,7 +263,7 @@ Item {
         Layout.fillWidth: true
         Layout.preferredHeight: 53
         radius: 18
-        color: Theme.bg2
+        color: Theme.heroBg
         opacity: wifiPanel.stage(1)
         transform: Translate { y: (1 - wifiPanel.stage(1)) * 8 }
 

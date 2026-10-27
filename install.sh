@@ -233,6 +233,14 @@ else
    chown "${SUDO_USER:-$USER}:${SUDO_USER:-$USER}" "$REAL_HOME/.config/chillpill-shell/config.jsonc"
 fi
 
+# seed theme presets into the user cache dir (read by Theme.qml)
+if [[ -d share/themes ]] && [[ -d "$REAL_HOME/.cache/chillpill-shell" ]]; then
+   info "Seeding theme presets into ~/.cache/chillpill-shell/themes"
+   mkdir -p "$REAL_HOME/.cache/chillpill-shell/themes"
+   cp -n share/themes/*.json "$REAL_HOME/.cache/chillpill-shell/themes/" 2>/dev/null || true
+   chown -R "${SUDO_USER:-$USER}:${SUDO_USER:-$USER}" "$REAL_HOME/.cache/chillpill-shell"
+fi
+
 # place systemd file
 #info "Copying systemd file to /etc/systemd/user"
 #install -m 644 chillpill-shell.service /etc/systemd/user/chillpill-shell.service

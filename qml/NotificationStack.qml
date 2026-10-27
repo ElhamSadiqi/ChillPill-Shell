@@ -25,7 +25,7 @@ Item {
     topRightRadius: 13
     bottomLeftRadius: 0
     bottomRightRadius: 0
-    color: Theme.bg3
+    color: Theme.notifHeaderBg
     visible: notifBox.visible
     z: 0
 
@@ -46,7 +46,7 @@ Item {
         width: 60
         height: 16
         radius: 10
-        color: clearAllHover.containsMouse ? Theme.bg : Theme.bg1
+        color: clearAllHover.containsMouse ? Theme.clearAllBgHover : Theme.clearAllBg
         Behavior on color { ColorAnimation { duration: 100 } }
         anchors.right: parent.right
         anchors.rightMargin: 8
@@ -85,7 +85,7 @@ Item {
     visible: notificationModule.notifications.length > 0 && root.controlCenterOpen
     clip: true
     border.width: 1
-    border.color: Theme.bg2
+    border.color: Theme.bg3
     z: 1
 
     Behavior on height { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }

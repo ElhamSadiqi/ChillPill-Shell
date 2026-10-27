@@ -255,7 +255,7 @@ Item {
     implicitWidth: 38
     implicitHeight: 20
     radius: 11
-    color: checked ? onColor : Theme.bg3
+    color: checked ? onColor : Theme.toggleOffBg
     scale: tgMa.pressed ? 0.95 : 1
 
     Behavior on color { ColorAnimation { duration: 140 } }
@@ -332,7 +332,7 @@ Item {
 
     implicitHeight: 42
     radius: 16
-    color: (selected || rowMa.containsMouse) ? Theme.bg3 : Theme.bg2
+    color: selected ? Theme.bg4 : (rowMa.containsMouse ? Theme.bg3 : Theme.rowBg)
     scale: rowMa.pressed ? 0.985 : 1
 
     Behavior on color { ColorAnimation { duration: 120 } }
@@ -454,7 +454,7 @@ Item {
         Layout.fillWidth: true
         Layout.preferredHeight: 53
         radius: 18
-        color: Theme.bg2
+        color: Theme.heroBg
         opacity: btPanel.stage(1)
         transform: Translate { y: (1 - btPanel.stage(1)) * 8 }
 

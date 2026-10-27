@@ -161,7 +161,7 @@ Rectangle {
         property string altGlyph: ""
         property bool showAlt: false
         property color idleColor: Theme.fg3
-        property color hoverColor: Theme.white
+        property color hoverColor: Theme.fgL
         property real glyphSize: 23
         property real nudge: 0
         property bool primary: false

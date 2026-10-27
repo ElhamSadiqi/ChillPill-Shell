@@ -31,7 +31,7 @@ RowLayout {
       Text {
         anchors.centerIn: parent
         text: wsButton.index + 1
-        color: wsButton.isActive ? Theme.white : Theme.wsActiveFg
+        color: wsButton.isActive ? Theme.white : Theme.wsInactiveFg
         font {
           family: Theme.fontFamily
           pixelSize: 9 * Config.pillScale
