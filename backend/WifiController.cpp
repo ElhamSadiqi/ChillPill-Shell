@@ -667,6 +667,16 @@ void WifiController::handleDevicePropertiesChanged(const QString &interfaceName,
     if (interfaceName != QLatin1String(kNetworkManagerWirelessInterface))
         return;
 
+    if (changedProperties.contains(QStringLiteral("Scanning"))) {
+        // trust only the start signal; NM may flip Scanning=false long before
+        // the scan is actually over, LastScan is the real completion marker
+        const bool scanning = changedProperties.value(QStringLiteral("Scanning")).toBool();
+        if (scanning) {
+            setScanningState(true);
+            m_scanTimeoutTimer.start();
+        }
+    }
+
     if (changedProperties.contains(QStringLiteral("LastScan"))) {
         setScanningState(false);
         m_scanTimeoutTimer.stop();
@@ -1302,7 +1312,9 @@ void WifiController::refreshNetworksInternal(bool rescan, bool triggeredBySignal
     });
 
     m_networks.setNetworks(orderedNetworks);
-    if (!triggeredBySignal)
+    // a user-triggered rescan must stay "scanning" until LastScan (or the 5s
+    // failsafe timer) ends it, otherwise the refresh spinner never runs
+    if (!triggeredBySignal && !rescan)
         setScanningState(false);
     updateStatusText();
 }
