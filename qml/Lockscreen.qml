@@ -115,6 +115,7 @@ Scope {
 
     // ---------- shared state (all monitors) ----------
     property string buffer: ""
+    property bool reveal: false   // show the password instead of the bullets (ctrl+v)
     property bool checking: false
     property bool failed: false
     property bool unlocking: false
@@ -140,7 +141,7 @@ Scope {
             return "wrong password \uf444 " + failCount + (failCount === 1 ? " attempt" : " attempts");
         if (pamRisky)
             return "pam counts earlier failures  \u00b7  enter again to submit";
-        return "enter to unlock \uf444 esc to clear";
+        return "Enter to unlock \uf444 Esc to clear \uf444 Ctrl+V to " + (root.reveal ? "hide" : "peek");
     }
     readonly property string detectedWallpaper: {
         let p = wpFile.text().split("\n")[0].trim();
@@ -180,6 +181,7 @@ Scope {
         root.failed = true;
         root.failCount++;
         root.buffer = "";
+        root.reveal = false;
         root.confirmArmed = false;
         root.shake();
         // pam_faillock denies=3/unlock_time=900: one miss left means a slow down
@@ -399,6 +401,7 @@ Scope {
         onLockedChanged: {
             if (locked) {
                 root.buffer = "";
+                root.reveal = false;
                 root.failed = false;
                 root.checking = false;
                 root.unlocking = false;
@@ -529,6 +532,9 @@ Scope {
                     } else if (event.key === Qt.Key_Escape
                                || (event.key === Qt.Key_U && (event.modifiers & Qt.ControlModifier))) {
                         root.buffer = "";
+                    } else if (event.key === Qt.Key_V && (event.modifiers & Qt.ControlModifier)) {
+                        if (root.buffer.length > 0)
+                            root.reveal = !root.reveal;
                     } else if (event.text.length > 0 && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))) {
                         const ch = event.text.charCodeAt(0);
                         if (ch >= 32 && ch !== 127) {
@@ -956,6 +962,7 @@ Scope {
                                                     clip: true
 
                                                     Row {
+                                                        visible: !root.reveal
                                                         anchors.horizontalCenter: parent.horizontalCenter
                                                         anchors.verticalCenter: parent.verticalCenter
                                                         spacing: 6
@@ -990,6 +997,51 @@ Scope {
                                                                     ColorAnimation { duration: 180 }
                                                                 }
                                                             }
+                                                        }
+                                                    }
+
+                                                    // revealed password, same spot the bullets sit in
+                                                    T {
+                                                        visible: root.reveal && root.buffer.length > 0
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        width: parent.width
+                                                        horizontalAlignment: Text.AlignHCenter
+                                                        elide: Text.ElideMiddle
+                                                        color: root.failed ? th.error : th.hi
+                                                        text: root.buffer
+                                                        Behavior on color { ColorAnimation { duration: 180 } }
+                                                    }
+                                                }
+
+                                                // eye toggle, same glyphs as the wifi password prompt
+                                                I {
+                                                    id: eyeBtn
+                                                    readonly property bool live: root.buffer.length > 0 && !root.checking && !root.unlocking
+                                                    anchors.right: goBtn.left
+                                                    anchors.rightMargin: 8
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: root.reveal ? "\uf070" : "\uf06e" // eye-slash / eye
+                                                    color: eyeArea.containsMouse ? th.hi : th.sub
+                                                    font.pixelSize: 16
+                                                    opacity: live ? 1 : 0
+                                                    visible: opacity > 0
+
+                                                    Behavior on opacity {
+                                                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                                    }
+                                                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                                                    MouseArea {
+                                                        id: eyeArea
+                                                        anchors.fill: parent
+                                                        anchors.margins: -7
+                                                        enabled: eyeBtn.live
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            root.reveal = !root.reveal;
+                                                            scene.forceActiveFocus();
                                                         }
                                                     }
                                                 }
