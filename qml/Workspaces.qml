@@ -30,6 +30,7 @@ RowLayout {
 
       Text {
         anchors.centerIn: parent
+        leftPadding: text.length > 1 ? 1 : 2 // 2px push for single digits, 1px for double digits
         text: wsButton.index + 1
         color: wsButton.isActive ? Theme.white : Theme.wsInactiveFg
         font {
