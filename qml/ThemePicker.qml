@@ -3,429 +3,475 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// theme picker pill state, same language as the bluetooth / control center panels:
-// header (back, title + status, reset) -> hairline -> rows with mini desktop previews -> key hint
-// fills the pill (320x320, final): fixed margins around, the list takes whatever height is left.
-// selection is a single pill that slides between rows (spotlight style), the list scrolls with it.
-// keys: up/down or j/k move (wraps), home/end jump, enter/space apply, 1-9 apply directly,
-//       r reset, esc close
 Item {
   id: root
-  implicitWidth: 400
-  implicitHeight: 340
+  implicitWidth: 680
+  implicitHeight: 175
 
   signal closeRequested()
   signal applyRequested(string name)
 
-  readonly property int count: Theme.themeNames.length
-  readonly property real rowH: 45
-  readonly property real pad: 3          // left / right / bottom edge margin
-  readonly property real padTop: 1       // header gets a bit more room under the rounded top
-  // selection is tracked by theme NAME, so a rescan / reorder of the list can never
-  // make enter or a click apply a different theme than the one highlighted
+  property string searchQuery: ""
   property string currentName: ""
-  readonly property int current: {
-    const i = Theme.themeNames.indexOf(currentName)
-    return i < 0 ? 0 : i
-  }
   property bool userMoved: false
-  property bool applying: false   // one apply per open: ignores key repeat / double click
-  property bool kbLock: false     // true while keyboard scrolling, hover must not steal selection
+  property bool applying: false
 
-  // staged reveal: header -> list -> hint
-  property real reveal: 0
-  Behavior on reveal { NumberAnimation { duration: 460; easing.type: Easing.OutCubic } }
-  function stage(i) { return Math.max(0, Math.min(1, reveal * 1.5 - i * 0.2)) }
+  // filter themeNames live by searchQuery
+  readonly property var filteredNames: {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return Theme.themeNames
+    return Theme.themeNames.filter(n => n.toLowerCase().includes(q))
+  }
 
-  readonly property string statusLine: count === 0 ? ""
-    : (Theme.activeTheme ? Theme.activeTheme : "default") + " \u2022 " + count + (count === 1 ? " preset" : " presets")
-  readonly property string hintLine: count > 0
-    ? "Enter to apply \u2022 R to reset \u2022 ESC to go back"
-    : "ESC to go back"
-
-  function activeIndex() {
-    const i = Theme.themeNames.indexOf(Theme.activeTheme)
+  readonly property int count: filteredNames.length
+  readonly property int current: {
+    if (count === 0) return -1
+    const i = filteredNames.indexOf(currentName)
     return i < 0 ? 0 : i
   }
 
-  // smooth scroll so the row is fully in view (rows are uniform, so y is just index * step)
-  function scrollTo(i) {
-    const step = rowH + list.spacing
-    const y = i * step
-    let target = list.contentY
-    if (y < list.contentY) target = y
-    else if (y + rowH > list.contentY + list.height) target = y + rowH - list.height
-    target = Math.max(0, Math.min(target, list.contentHeight - list.height))
-    if (Math.abs(target - list.contentY) < 1) return
-    scrollAnim.to = target
-    scrollAnim.restart()
+  // keep currentName synced if search filters out the previously selected item
+  onFilteredNamesChanged: {
+    if (count > 0 && filteredNames.indexOf(currentName) < 0) {
+      currentName = filteredNames[0]
+    }
+    syncPathIndex()
   }
-  // up/down: wraps around like spotlight
+
+  onCurrentChanged: syncPathIndex()
+
+  function syncPathIndex() {
+    if (count > 0 && current >= 0 && carousel.currentIndex !== current) {
+      carousel.currentIndex = current
+    }
+  }
+
+  // staged reveal animation
+  property real reveal: 0
+  Behavior on reveal { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
+
   function step(d) {
-    if (count === 0) return
-    if (applying) return
+    if (count <= 1 || applying) return
     userMoved = true
-    kbLock = true
-    kbLockTimer.restart()
-    currentName = Theme.themeNames[(current + d + count) % count]
-    scrollTo(current)
+    if (d > 0) carousel.incrementCurrentIndex()
+    else carousel.decrementCurrentIndex()
   }
+
   function jumpTo(i) {
-    if (count === 0) return
-    if (applying) return
+    if (count === 0 || applying) return
     userMoved = true
-    kbLock = true
-    kbLockTimer.restart()
-    currentName = Theme.themeNames[Math.max(0, Math.min(count - 1, i))]
-    scrollTo(current)
+    const idx = Math.max(0, Math.min(count - 1, i))
+    carousel.currentIndex = idx
   }
+
   function applyName(name) {
     if (applying) return
     applying = true
     applyRequested(name)
-    closeTimer.restart()          // close a tick later so the apply is never torn down mid-flight
+    closeTimer.restart()
   }
+
   function applyAt(i) {
     if (i < 0 || i >= count) return
-    applyName(Theme.themeNames[i])
+    applyName(filteredNames[i])
   }
-  function resetTheme() { applyName("") }
+
+  function resetTheme() {
+    applyName("")
+  }
 
   Timer { id: closeTimer; interval: 60; onTriggered: { root.closeRequested(); root.applying = false } }
-  Timer { id: kbLockTimer; interval: 320; onTriggered: root.kbLock = false }
 
-  // fresh scan every open, so presets dropped into the dir show up without a restart
   Component.onCompleted: {
     Theme.scanThemes()
-    currentName = Theme.activeTheme
+    currentName = Theme.activeTheme || (Theme.themeNames.length > 0 ? Theme.themeNames[0] : "")
     reveal = 1
-    Qt.callLater(() => { root.forceActiveFocus(); root.scrollTo(root.current) })
+    Qt.callLater(() => {
+      searchInput.forceActiveFocus()
+      syncPathIndex()
+    })
   }
 
-  // scan is async: once the list lands, start on the active theme (unless you already moved)
   Connections {
     target: Theme
     function onThemeNamesChanged() {
-      if (!root.userMoved) { root.currentName = Theme.activeTheme; Qt.callLater(() => root.scrollTo(root.current)) }
+      if (!root.userMoved) {
+        root.currentName = Theme.activeTheme || (Theme.themeNames.length > 0 ? Theme.themeNames[0] : "")
+        Qt.callLater(() => root.syncPathIndex())
+      }
     }
   }
 
-  focus: true
-  Keys.enabled: true
+  // global keyboard navigation (works even while typing in the search bar)
   Keys.onPressed: (e) => {
     const k = e.key
     e.accepted = true
-    if (k === Qt.Key_Escape) closeRequested()
-    else if (k === Qt.Key_Up   || k === Qt.Key_K) step(-1)
-    else if (k === Qt.Key_Down || k === Qt.Key_J) step(1)
-    else if (k === Qt.Key_Home) jumpTo(0)
-    else if (k === Qt.Key_End) jumpTo(count - 1)
-    else if (k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space) applyAt(current)
-    else if (k === Qt.Key_R) resetTheme()
-    else if (k >= Qt.Key_1 && k <= Qt.Key_9) applyAt(k - Qt.Key_1)
-    else e.accepted = false
-  }
-
-  // header button: flat until hovered
-  component HeaderButton: Rectangle {
-    id: hb
-    property string glyph: ""
-    property color tone: Theme.fg4
-    property color toneHover: Theme.fg
-    signal clicked
-
-    implicitWidth: 28
-    implicitHeight: 28
-    radius: height / 2
-    color: ma.containsMouse ? Theme.bg3 : "transparent"
-    scale: ma.pressed ? 0.92 : 1
-
-    Behavior on color { ColorAnimation { duration: 120 } }
-    Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
-
-    Text {
-      anchors.centerIn: parent
-      text: hb.glyph
-      color: ma.containsMouse ? hb.toneHover : hb.tone
-      font { family: Theme.nerdFontFamily; pixelSize: 12 }
-      Behavior on color { ColorAnimation { duration: 120 } }
-    }
-
-    MouseArea {
-      id: ma
-      anchors.fill: parent
-      hoverEnabled: true
-      cursorShape: Qt.PointingHandCursor
-      onClicked: hb.clicked()
+    if (k === Qt.Key_Escape) {
+      if (searchQuery.length > 0) {
+        searchQuery = ""
+      } else {
+        closeRequested()
+      }
+    } else if (k === Qt.Key_Left || (k === Qt.Key_H && searchQuery.length === 0)) {
+      step(-1)
+    } else if (k === Qt.Key_Right || (k === Qt.Key_L && searchQuery.length === 0)) {
+      step(1)
+    } else if (k === Qt.Key_Home) {
+      jumpTo(0)
+    } else if (k === Qt.Key_End) {
+      jumpTo(count - 1)
+    } else if (k === Qt.Key_Return || k === Qt.Key_Enter) {
+      applyAt(current)
+    } else if (k === Qt.Key_R && (e.modifiers & Qt.ControlModifier)) {
+      resetTheme()
+    } else {
+      e.accepted = false
     }
   }
 
-  // fills the pill, fixed breathing room on every edge
   ColumnLayout {
-    id: content
     anchors.fill: parent
-    anchors.leftMargin: root.pad
-    anchors.rightMargin: root.pad
-    anchors.bottomMargin: root.pad
-    anchors.topMargin: root.padTop
+    anchors.leftMargin: 18
+    anchors.rightMargin: 18
+    anchors.topMargin: 10
+    anchors.bottomMargin: 10
     spacing: 8
+    opacity: root.reveal
 
-    // header: back | title + status | reset
+    // ── Top Bar: Search Input + Counter + Reset ──────────────────────────────
     RowLayout {
       Layout.fillWidth: true
-      spacing: 8
-      opacity: root.stage(0)
-      transform: Translate { y: (1 - root.stage(0)) * 8 }
+      spacing: 10
 
-      HeaderButton {
-        glyph: "\uf053" // nf-fa-chevron_left
-        onClicked: root.closeRequested()
+      Text {
+        text: "\uf002" // nf-fa-search
+        color: searchInput.activeFocus ? Theme.accent : Theme.fg4
+        font { family: Theme.nerdFontFamily; pixelSize: 13 }
+        Behavior on color { ColorAnimation { duration: 150 } }
       }
 
-      Column {
+      Item {
         Layout.fillWidth: true
-        spacing: 1
+        Layout.preferredHeight: 24
 
-        Text {
-          text: "Themes"
+        TextInput {
+          id: searchInput
+          anchors.fill: parent
+          verticalAlignment: TextInput.AlignVCenter
           color: Theme.fg
-          font { family: Theme.fontFamily; pixelSize: 16 }
+          selectionColor: Theme.accent
+          selectedTextColor: Theme.bg
+          clip: true
+          font { family: Theme.fontFamily; pixelSize: 13 }
+          text: root.searchQuery
+          onTextChanged: root.searchQuery = text
+
+          Keys.forwardTo: [root]
         }
+
         Text {
-          width: parent.width
-          visible: text.length > 0
-          text: root.statusLine
-          color: Theme.fg4
-          elide: Text.ElideRight
-          font { family: Theme.fontFamily; pixelSize: 9 }
+          anchors.fill: parent
+          verticalAlignment: Text.AlignVCenter
+          visible: searchInput.text.length === 0
+          text: "Search themes..."
+          color: Theme.fg5
+          font { family: Theme.fontFamily; pixelSize: 13 }
         }
       }
 
-      HeaderButton {
-        glyph: "\uf0e2" // nf-fa-rotate_left (reset to default)
-        onClicked: root.resetTheme()
+      // Clear search button (visible when typing)
+      Text {
+        visible: root.searchQuery.length > 0
+        text: "\uf00d" // nf-fa-times
+        color: clearMa.containsMouse ? Theme.fg : Theme.fg4
+        font { family: Theme.nerdFontFamily; pixelSize: 12 }
+        MouseArea {
+          id: clearMa
+          anchors.fill: parent
+          anchors.margins: -4
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: {
+            root.searchQuery = ""
+            searchInput.forceActiveFocus()
+          }
+        }
       }
-    }
 
-    // hairline divider
-    Item {
-      Layout.fillWidth: true
-      Layout.preferredHeight: 2
-      Layout.leftMargin: 4
-      Layout.rightMargin: 4
-      opacity: root.stage(0)
+      // Reset to default theme button
       Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        height: 1
-        color: Theme.bg3
-      }
-    }
-
-    // preset list: takes all the height between divider and hint
-    ListView {
-      id: list
-      Layout.fillWidth: true
-      Layout.fillHeight: true
-      Layout.minimumHeight: 0
-      visible: root.count > 0
-      clip: true
-      spacing: 1
-      boundsBehavior: Flickable.StopAtBounds
-      interactive: contentHeight > height
-      model: Theme.themeNames
-      currentIndex: root.current
-      highlightFollowsCurrentItem: false
-      opacity: root.stage(1)
-      transform: Translate { y: (1 - root.stage(1)) * 8 }
-
-      onMovementStarted: scrollAnim.stop()
-
-      NumberAnimation {
-        id: scrollAnim
-        target: list
-        property: "contentY"
-        duration: 220
-        easing.type: Easing.OutExpo
-      }
-
-      // sliding selection pill with a slight overshoot (same feel as spotlight);
-      // no slide-in while the panel is still revealing
-      highlight: Rectangle {
-        x: 2
-        y: list.currentItem ? list.currentItem.y : 0
-        width: list.width - 4
-        height: root.rowH
-        radius: 14
-        color: Theme.bgD
-        opacity: list.currentItem ? 1 : 0
-        Behavior on y {
-          enabled: root.reveal >= 1
-          NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
-        }
-      }
-
-      delegate: Rectangle {
-        id: row
-        required property int index
-        required property string modelData
-
-        readonly property bool selected: root.current === index
-        readonly property bool isActive: Theme.activeTheme === modelData
-        property var d: ({})
-        readonly property color pvBg: d.bg || Theme.bg
-        readonly property color pvFg: d.fg || Theme.fg
-        readonly property color pvAccent: d.accent || Theme.accent
-
-        width: list.width
-        height: root.rowH
-        radius: 14
-        color: "transparent"            // the sliding pill does the highlighting
-        scale: rowMa.pressed ? 0.985 : 1
-        Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
-
-        FileView {
-          id: presetView
-          path: Theme.themeDir + "/" + row.modelData + ".json"
-          preload: true
-          onLoaded: row.refresh()
-          onFileChanged: row.refresh()
-        }
-        function refresh() {
-          let o = {}
-          try { o = JSON.parse(presetView.text()) } catch (e) { o = {} }
-          row.d = o
-        }
-        Component.onCompleted: refresh()
-
-        // mini "desktop" preview painted in the preset's own colors
-        Rectangle {
-          id: preview
-          width: 30
-          height: 25
-          radius: 7
-          anchors.left: parent.left
-          anchors.leftMargin: 11
-          anchors.verticalCenter: parent.verticalCenter
-          color: row.pvBg
-          border.width: 1
-          border.color: Qt.rgba(row.pvFg.r, row.pvFg.g, row.pvFg.b, 0.18)
-          scale: row.selected ? 1.05 : 1
-          Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.6 } }
-
-          Rectangle {   // accent pill
-            id: pvBar
-            x: 5; y: 5
-            width: 10; height: 3
-            radius: height / 2
-            color: row.pvAccent
-          }
-          Rectangle {   // text line 1
-            id: pvLine1
-            anchors.left: parent.left
-            anchors.leftMargin: 5
-            anchors.top: pvBar.bottom
-            anchors.topMargin: 4
-            width: 14; height: 2
-            radius: height / 2
-            color: row.pvFg; opacity: 0.6
-          }
-          Rectangle {   // text line 2
-            anchors.left: pvLine1.left
-            anchors.top: pvLine1.bottom
-            anchors.topMargin: 3
-            width: 8; height: 2
-            radius: height / 2
-            color: row.pvFg; opacity: 0.3
-          }
-          Rectangle {   // accent dot
-            width: 4; height: width
-            radius: width / 2
-            anchors.right: parent.right
-            anchors.rightMargin: 5
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 5
-            color: row.pvAccent
-          }
-        }
+        implicitWidth: 24
+        implicitHeight: 24
+        radius: 12
+        color: resetMa.containsMouse ? Theme.bg3 : "transparent"
+        Behavior on color { ColorAnimation { duration: 120 } }
 
         Text {
-          id: rowState
-          anchors.right: parent.right
-          anchors.rightMargin: 14
-          anchors.verticalCenter: parent.verticalCenter
-          text: (row.d.variant || "") + (row.isActive ? ((row.d.variant ? " \u00b7 " : "") + "active") : "")
-          color: row.isActive ? Theme.accent : Theme.fg5
-          font { family: Theme.fontFamily; pixelSize: 9 }
-        }
-
-        Text {
-          anchors.left: preview.right
-          anchors.leftMargin: 12 + (row.selected ? 2 : 0)   // nudge selected text right a touch
-          anchors.right: rowState.left
-          anchors.rightMargin: 10
-          anchors.verticalCenter: parent.verticalCenter
-          text: row.d.name || row.modelData
-          color: row.selected || row.isActive ? Theme.fg : Theme.fg4
-          elide: Text.ElideRight
-          font { family: Theme.fontFamily; pixelSize: 12; weight: row.isActive ? 500 : 400 }
-          Behavior on color { ColorAnimation { duration: 120 } }
-          Behavior on anchors.leftMargin { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+          anchors.centerIn: parent
+          text: "\uf0e2" // nf-fa-rotate_left
+          color: resetMa.containsMouse ? Theme.fg : Theme.fg4
+          font { family: Theme.nerdFontFamily; pixelSize: 11 }
         }
 
         MouseArea {
-          id: rowMa
+          id: resetMa
           anchors.fill: parent
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
-          // hover moves the selection pill, like spotlight
-          onEntered: {
-            if (root.kbLock || list.moving || scrollAnim.running) return
-            root.userMoved = true
-            root.currentName = row.modelData
-          }
-          onClicked: root.applyName(row.modelData)
+          onClicked: root.resetTheme()
         }
       }
 
-      // scroll thumb
-      Rectangle {
-        visible: list.contentHeight > list.height
-        width: 3
-        radius: 1.5
-        anchors.right: parent.right
-        y: list.height * list.visibleArea.yPosition
-        height: Math.max(16, list.height * list.visibleArea.heightRatio)
+      // Index counter (e.g., 1/10)
+      Text {
+        text: root.count > 0 ? ((root.current + 1) + "/" + root.count) : "0/0"
         color: Theme.fg4
-        opacity: (list.moving || scrollAnim.running) ? 0.7 : 0
-        Behavior on opacity { NumberAnimation { duration: 250 } }
+        font { family: Theme.fontFamily; pixelSize: 12; weight: 500 }
       }
     }
 
-    // empty state
-    Text {
-      visible: root.count === 0
+    // ── Infinite Wrap-Around Carousel (PathView) ─────────────────────────────
+    Item {
       Layout.fillWidth: true
       Layout.fillHeight: true
-      horizontalAlignment: Text.AlignHCenter
-      verticalAlignment: Text.AlignVCenter
-      wrapMode: Text.WordWrap
-      text: "No presets around. drop some JSON in\n~/.cache/chillpill-shell/themes/"
-      color: Theme.fg4
-      font { family: Theme.fontFamily; pixelSize: 10 }
+      clip: true
+
+      PathView {
+        id: carousel
+        anchors.fill: parent
+        visible: root.count > 0
+        model: root.filteredNames
+
+        readonly property real cardW: 300
+        readonly property real cardH: height - 50
+        readonly property real cardSpacing: 14
+        readonly property real step: cardW + cardSpacing
+        readonly property int visibleSlots: Math.min(root.count, 5)
+
+        // Show up to 5 slots on the track so left & right peeks stay filled seamlessly
+        pathItemCount: visibleSlots
+        preferredHighlightBegin: 0.5
+        preferredHighlightEnd: 0.5
+        highlightRangeMode: PathView.StrictlyEnforceRange
+        highlightMoveDuration: 240
+        snapMode: PathView.SnapToItem
+        dragMargin: height / 2
+
+        // Keep root.currentName synced when user drags or steps the PathView
+        onCurrentIndexChanged: {
+          if (currentIndex >= 0 && currentIndex < root.count) {
+            const name = root.filteredNames[currentIndex]
+            if (root.currentName !== name) {
+              root.currentName = name
+            }
+          }
+        }
+
+        // Horizontal track centered at width / 2
+        path: Path {
+          startX: (carousel.width / 2) - (carousel.visibleSlots * carousel.step) / 2
+          startY: carousel.height / 2
+          PathLine {
+            x: (carousel.width / 2) + (carousel.visibleSlots * carousel.step) / 2
+            y: carousel.height / 2
+          }
+        }
+
+        // Mouse wheel scrolls smoothly through the endless loop
+        WheelHandler {
+          onWheel: (event) => {
+            if (event.angleDelta.y > 0 || event.angleDelta.x > 0) root.step(-1)
+            else if (event.angleDelta.y < 0 || event.angleDelta.x < 0) root.step(1)
+          }
+        }
+
+        delegate: Item {
+          id: cardSlot
+          required property int index
+          required property string modelData
+
+          readonly property bool selected: PathView.isCurrentItem
+          readonly property bool isActive: Theme.activeTheme === modelData
+
+          width: carousel.cardW
+          height: carousel.height
+          z: selected ? 10 : 1
+
+          property var d: ({})
+          readonly property color pvBg: d.bg || Theme.bg2
+          readonly property color pvFg: d.fg || Theme.fg
+          readonly property color pvAccent: d.accent || Theme.accent
+
+          readonly property var dotColors: {
+            if (Array.isArray(d.burstPalette) && d.burstPalette.length >= 6) {
+              return d.burstPalette.slice(0, 6)
+            }
+            return [
+              d.danger || d.mutedFg || "#ff6b6b",
+              d.ok || d.vpnFg || "#63e6be",
+              d.warnMed || d.warning || "#ffd43b",
+              d.netFg || d.ccActiveFg || "#4490ee",
+              d.powerSleep || "#b197fc",
+              d.accent || "#63e6be"
+            ]
+          }
+
+          FileView {
+            id: presetView
+            path: Theme.themeDir + "/" + cardSlot.modelData + ".json"
+            preload: true
+            onLoaded: cardSlot.refresh()
+            onFileChanged: cardSlot.refresh()
+          }
+
+          function refresh() {
+            let o = {}
+            try { o = JSON.parse(presetView.text()) } catch (e) { o = {} }
+            cardSlot.d = o
+          }
+          Component.onCompleted: refresh()
+
+          Rectangle {
+            id: card
+            anchors.centerIn: parent
+            width: carousel.cardW
+            height: carousel.cardH
+            radius: 14
+            color: cardSlot.pvBg
+            scale: cardMa.pressed ? 0.96 : (cardSlot.selected ? 1.03 : 0.96)
+            opacity: cardSlot.selected ? 1.0 : 0.72
+
+            border.width: cardSlot.selected ? 2 : 1
+            border.color: cardSlot.selected
+              ? cardSlot.pvAccent
+              : Qt.rgba(cardSlot.pvFg.r, cardSlot.pvFg.g, cardSlot.pvFg.b, 0.14)
+
+            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 180 } }
+            Behavior on border.color { ColorAnimation { duration: 180 } }
+
+            // Active theme dot badge in top-right
+            Rectangle {
+              visible: cardSlot.isActive
+              width: 7
+              height: 7
+              radius: 3.5
+              anchors.top: parent.top
+              anchors.right: parent.right
+              anchors.margins: 10
+              color: cardSlot.pvAccent
+            }
+
+            Column {
+              anchors.centerIn: parent
+              spacing: 10
+              width: parent.width - 20
+
+              Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 6
+
+                Repeater {
+                  model: cardSlot.dotColors
+                  delegate: Rectangle {
+                    required property var modelData
+                    width: 11
+                    height: 11
+                    radius: 5.5
+                    color: modelData
+                  }
+                }
+              }
+
+              Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                text: cardSlot.d.name || cardSlot.modelData
+                color: cardSlot.pvFg
+                elide: Text.ElideRight
+                font {
+                  family: Theme.fontFamily
+                  pixelSize: 12
+                  weight: cardSlot.selected ? 600 : 400
+                }
+              }
+            }
+
+            MouseArea {
+              id: cardMa
+              anchors.fill: parent
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onClicked: {
+                if (cardSlot.selected) {
+                  root.applyName(cardSlot.modelData)
+                } else {
+                  root.userMoved = true
+                  carousel.currentIndex = cardSlot.index
+                }
+              }
+              onDoubleClicked: root.applyName(cardSlot.modelData)
+            }
+          }
+        }
+      }
+
+      // Left & right edge fade masks (always active when looping > 2 themes)
+      Rectangle {
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 28
+        visible: root.count > 2
+        gradient: Gradient {
+          orientation: Gradient.Horizontal
+          GradientStop { position: 0.0; color: Theme.bg }
+          GradientStop { position: 1.0; color: "transparent" }
+        }
+      }
+
+      Rectangle {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 28
+        visible: root.count > 2
+        gradient: Gradient {
+          orientation: Gradient.Horizontal
+          GradientStop { position: 0.0; color: "transparent" }
+          GradientStop { position: 1.0; color: Theme.bg }
+        }
+      }
+
+      // Empty state
+      Text {
+        visible: root.count === 0
+        anchors.centerIn: parent
+        text: root.searchQuery.length > 0
+          ? ("No themes matching \"" + root.searchQuery + "\"")
+          : "No presets found in ~/.cache/chillpill-shell/themes/"
+        color: Theme.fg4
+        font { family: Theme.fontFamily; pixelSize: 12 }
+      }
     }
 
-    // key hint: centered, wraps onto a second line instead of clipping
-    Text {
+    // ── Bottom Bar: Key Hints ────────────────────────────────────────────────
+    RowLayout {
       Layout.fillWidth: true
-      horizontalAlignment: Text.AlignHCenter
-      wrapMode: Text.WordWrap
-      maximumLineCount: 2
-      text: root.hintLine
-      color: Theme.fg4
-      font { family: Theme.fontFamily; pixelSize: 10 }
-      opacity: root.stage(2)
+
+      Text {
+        text: "\u2190/\u2192 navigate \u2022 Ctrl+R reset \u2022 ESC close"
+        color: Theme.fg5
+        font { family: Theme.fontFamily; pixelSize: 10 }
+      }
+
+      Item { Layout.fillWidth: true }
+
+      Text {
+        text: "Enter to apply"
+        color: Theme.fg4
+        font { family: Theme.fontFamily; pixelSize: 10; weight: 500 }
+      }
     }
   }
 }

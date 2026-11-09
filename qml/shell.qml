@@ -446,7 +446,7 @@ ShellRoot {
                      : controlCenter ? (wifiPanelOpen ? wifiPanelBoxWidth : bluetoothPanelOpen ? bluetoothPanelBoxWidth : ccBaseWidth)
                      : spotlight ? 328
                      : miniDashboard ? 420
-                     : themePicker ? 310
+                     : themePicker ? 800
                      : (cliphistOpen && cliphistPreviewing) ? 400
                      : wallpaperSwitcherOpen ? 600
                      : cliphistOpen ? 440
